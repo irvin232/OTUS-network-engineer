@@ -1,0 +1,17 @@
+vlan 3
+ name Management
+!
+vlan 4
+ name Operations
+!
+vlan 7
+ name ParkingLot
+!
+interface FastEthernet0/18
+ switchport access vlan 4
+ switchport mode access
+!
+interface Vlan3
+ ip address 192.168.3.12 255.255.255.0
+!
+ip default-gateway 192.168.3.1
