@@ -6,7 +6,7 @@
 ###  Решение:
 Part 1: Build the Network and Configure Basic Device Settings;
 
-![](network topology.png)
+![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab01/network%20topology.png)
 
 Part 2: Create VLANs and Assign Switch Ports;
 Part 3: Configure an 802.1Q Trunk between the Switches;
