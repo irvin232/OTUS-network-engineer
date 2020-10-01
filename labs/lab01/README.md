@@ -25,4 +25,5 @@
 ![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab01/Ping%20from%20PCA.png)
 
 - Делаем трассировку с PCB до PCA
+
 ![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab01/Tracert%20from%20PCB.png)
