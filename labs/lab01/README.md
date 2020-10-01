@@ -4,8 +4,10 @@
 Добавление сетей VLAN и назначение портов
 
 ###  Решение:
-За основу взят Cisco Packet Tracer. 
+За основу взят Cisco Packet Tracer.
+
 Схема сети:
+
 ![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab01/network%20topology.png)
 
 Основные шаги настройки оборудования:
@@ -14,6 +16,6 @@
 - Конфигурируем транки на свичах;
 - Конфигурируем роутинг между vlan'ами на роутере;
 
-Итоговые конфиги оборудования.
+Итоговые конфиги оборудования(https://github.com/irvin232/OTUS-network-engineer/tree/master/labs/lab01/Configs)
 
 Проверяем, что маршрутизация между vlan'ами работает.
