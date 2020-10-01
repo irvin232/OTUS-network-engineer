@@ -1,9 +1,9 @@
 # VLAN и маршрутизация между VLAN
 
-Домашнее задание:
+###  Задание:
 Добавление сетей VLAN и назначение портов
 
-Решение задания:
+###  Решение:
 Part 1: Build the Network and Configure Basic Device Settings;
 Part 2: Create VLANs and Assign Switch Ports;
 Part 3: Configure an 802.1Q Trunk between the Switches;
