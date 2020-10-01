@@ -5,6 +5,7 @@
 
 ###  Решение:
 Part 1: Build the Network and Configure Basic Device Settings;
+
 ![](network topology.png)
 
 Part 2: Create VLANs and Assign Switch Ports;
