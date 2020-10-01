@@ -4,11 +4,16 @@
 Добавление сетей VLAN и назначение портов
 
 ###  Решение:
-Part 1: Build the Network and Configure Basic Device Settings;
-
+За основу взят Cisco Packet Tracer. 
+Схема сети:
 ![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab01/network%20topology.png)
 
-Part 2: Create VLANs and Assign Switch Ports;
-Part 3: Configure an 802.1Q Trunk between the Switches;
-Part 4: Configure Inter-VLAN Routing on the Router;
-Part 5: Verify Inter-VLAN Routing is working.
+Основные шаги настройки оборудования:
+- Делаем базовые настройки на оборудовании;
+- Создаем vlan'ы и интерфейсы в vlan'ах на свичах;
+- Конфигурируем транки на свичах;
+- Конфигурируем роутинг между vlan'ами на роутере;
+
+Итоговые конфиги оборудования.
+
+Проверяем, что маршрутизация между vlan'ами работает.
