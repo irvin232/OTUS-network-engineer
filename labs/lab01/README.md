@@ -7,7 +7,7 @@
 
 ##### Лабораторная работа выполнена на базе Cisco Packet Tracer.
 
-##### Схема сети (Cisco Packet Tracer):
+##### Схема сети:
 
 ![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab01/network%20topology.png)
 
