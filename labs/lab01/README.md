@@ -16,6 +16,6 @@
 - Конфигурируем транки на свичах;
 - Конфигурируем роутинг между vlan'ами на роутере;
 
-Итоговые конфиги оборудования(https://github.com/irvin232/OTUS-network-engineer/tree/master/labs/lab01/Configs "Итоговые конфиги оборудования")
+[Итоговые конфиги оборудования](https://github.com/irvin232/OTUS-network-engineer/tree/master/labs/lab01/Configs).
 
 Проверяем, что маршрутизация между vlan'ами работает.
