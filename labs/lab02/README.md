@@ -74,32 +74,32 @@ wr
 #### Шаг 4:	Проверяем связь. Проверяем способность компьютеров обмениваться эхо-запросами.
 
 эхо-запрос от коммутатора S1 на коммутатор S2
-...
+```
 S1#ping 192.168.1.2
 
 Type escape sequence to abort.
 Sending 5, 100-byte ICMP Echos to 192.168.1.2, timeout is 2 seconds:
 !!!!!
 Success rate is 100 percent (5/5), round-trip min/avg/max = 0/0/3 ms
-...
+```
 эхо-запрос от коммутатора S1 на коммутатор S3
-...
+```
 S1#ping 192.168.1.2
 
 Type escape sequence to abort.
 Sending 5, 100-byte ICMP Echos to 192.168.1.2, timeout is 2 seconds:
 !!!!!
 Success rate is 100 percent (5/5), round-trip min/avg/max = 0/0/3 ms
-...
+```
 эхо-запрос от коммутатора S2 на коммутатор S3
-...
+```
 S2#ping 192.168.1.3
 
 Type escape sequence to abort.
 Sending 5, 100-byte ICMP Echos to 192.168.1.3, timeout is 2 seconds:
 !!!!!
 Success rate is 100 percent (5/5), round-trip min/avg/max = 0/0/0 ms
-...
+```
 
 Выполняйте отладку до тех пор, пока ответы на все вопросы не будут положительными.
 
