@@ -84,12 +84,12 @@ Success rate is 100 percent (5/5), round-trip min/avg/max = 0/0/3 ms
 ```
 эхо-запрос от коммутатора S1 на коммутатор S3
 ```
-S1#ping 192.168.1.2
+S1#ping 192.168.1.3
 
 Type escape sequence to abort.
-Sending 5, 100-byte ICMP Echos to 192.168.1.2, timeout is 2 seconds:
+Sending 5, 100-byte ICMP Echos to 192.168.1.3, timeout is 2 seconds:
 !!!!!
-Success rate is 100 percent (5/5), round-trip min/avg/max = 0/0/3 ms
+Success rate is 100 percent (5/5), round-trip min/avg/max = 0/0/1 ms
 ```
 эхо-запрос от коммутатора S2 на коммутатор S3
 ```
@@ -101,15 +101,82 @@ Sending 5, 100-byte ICMP Echos to 192.168.1.3, timeout is 2 seconds:
 Success rate is 100 percent (5/5), round-trip min/avg/max = 0/0/0 ms
 ```
 
-Выполняйте отладку до тех пор, пока ответы на все вопросы не будут положительными.
-
 #### Часть 2:	Определение корневого моста
+
 #### Шаг 1:	Отключите все порты на коммутаторах.
+Отправляем все порты в down командой ***shutdown***
+
 #### Шаг 2:	Настройте подключенные порты в качестве транковых.
+```
+int range f0/1-4
+switchport mode trunk
+exit
+```
 #### Шаг 3:	Включите порты F0/2 и F0/4 на всех коммутаторах.
+Включаем нужные порты командой ***no shutdown***
+
 #### Шаг 4:	Отобразите данные протокола spanning-tree.
 
-S1# show spanning-tree
+```
+S1#show spanning-tree 
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0006.2A7B.3A44
+             Cost        19
+             Port        4(FastEthernet0/4)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     00D0.FFA7.B486
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/2            Altn BLK 19        128.2    P2p
+Fa0/4            Root FWD 19        128.4    P2p
+```
+```
+S2#sh spanning-tree 
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0006.2A7B.3A44
+             Cost        19
+             Port        4(FastEthernet0/4)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     0090.216B.0DE9
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/4            Root FWD 19        128.4    P2p
+Fa0/2            Desg FWD 19        128.2    P2p
+```
+```
+S3#sh spanning-tree 
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0006.2A7B.3A44
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     0006.2A7B.3A44
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/2            Desg FWD 19        128.2    P2p
+Fa0/4            Desg FWD 19        128.4    P2p
+```
+
 
 S2# show spanning-tree
 
