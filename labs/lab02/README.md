@@ -27,7 +27,7 @@
 
 ##### Схема сети:
 
-![]()
+![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab02/scheme%201.png)
 
 #### Часть 1:	Создание сети и настройка основных параметров устройства
 
