@@ -29,6 +29,8 @@
 
 ![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab02/scheme%201.png)
 
+[Конфиги оборудования](https://github.com/irvin232/OTUS-network-engineer/tree/master/labs/lab02/Configs).
+
 #### Часть 1:	Создание сети и настройка основных параметров устройства.
 
 В части 1 настраиваем топологию сети и основные параметры маршрутизаторов.
