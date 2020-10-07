@@ -64,12 +64,12 @@ exit
 e.	Настроим **logging synchronous** для консольного канала.
 ```
 line con 0
-login synchronous
+logging synchronous
 exit
 ```
 f.	Настроим баннерное сообщение дня (MOTD) для предупреждения пользователей о запрете несанкционированного доступа.
 ```
-banner login ^C Accessing the device that unauthorized access is prohibited ^C
+banner motd ^C Accessing the device that unauthorized access is prohibited ^C
 ```
 g.	Задаем IP-адреса, указанные в таблице адресации для VLAN 1 на всех коммутаторах.
 ```
