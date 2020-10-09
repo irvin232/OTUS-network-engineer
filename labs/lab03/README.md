@@ -28,6 +28,7 @@
 
 #### VLAN Table
 | VLAN	| Name	| Interface Assigned |
+| -----	| -----	| ------------------ |
 | 1	| N/A	| S2: F0/18 |
 | 100	| Clients	| S1: F0/6 |
 | 200	| Management	| S1: VLAN 200  |
