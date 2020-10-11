@@ -166,7 +166,7 @@ switchport trunk native vlan 1000
 switchport trunk allowed vlan 100,200,1000
 switchport mode trunk
 ```
-#### Шаг 8: S2 - Конфигурируем порты.
+#### Шаг 8: S2 - Конфигурируем порты и добавляем шлюз по умолчанию.
 ```
 conf t
 interface range f0/1-24
