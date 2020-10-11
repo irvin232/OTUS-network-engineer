@@ -8,8 +8,11 @@
 
 ##### Лабораторная работа выполнена на базе Cisco Packet Tracer.
 
+### Настроить DHCPv4
+
 ##### Схема сети:
 
+![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab03/scheme%201.png)
 
 #### Таблица адресов
 | Device	| Interface	| IP Address |	Subnet Mask	| Default Gateway |
