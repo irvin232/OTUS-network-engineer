@@ -221,5 +221,8 @@ lease 7 12 30
 int g0/0/1
 ip helper-address 10.0.0.1
 ```
-Шаг2: Проверяем выдачу IP адреса на PC-В
-![](
+#### Шаг2: Проверяем выдачу IP адреса на PC-В
+![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab03/PС-B.png)
+
+#### Шаг3: Пингуем шлюз
+
