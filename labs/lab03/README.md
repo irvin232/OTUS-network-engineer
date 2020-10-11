@@ -166,18 +166,29 @@ int f0/5
 switchport trunk native vlan 1000
 switchport trunk allowed vlan 100,200,1000
 switchport mode trunk
-
+```
 Шаг 8: S2 - Конфигурируем порты
+```
 conf t
 interface range f0/1-24
 shutdown
 exit
 interface range g0/1-2
 shutdown
+default interface f0/5
 default interface f0/18
+int f0/5
+switchport trunk native vlan 1000
+switchport trunk allowed vlan 100,200,1000
+switchport mode trunk
+exit
+int f0/18
+switchport mode access
+exit
 int vlan 1
 description Management
 ip address 192.168.1.66 255.255.255.224
+no shutdown
 exit
 ip default-gateway 192.168.1.65
 ```
