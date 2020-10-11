@@ -191,3 +191,23 @@ no shutdown
 exit
 ip default-gateway 192.168.1.65
 ```
+
+#### Часть 2: Конфигурируем и проверяем два DHCPv4 сервера на R1.
+
+#### Шаг 1: Конфигурируем два DHCPv4 сервера на R1.
+```
+ip dhcp excluded-address 192.168.1.1 192.168.1.5
+ip dhcp pool DHCP_192.168.1.0/26 
+network 192.168.1.0 255.255.255.192
+default-router 192.168.1.1
+domain-name ccna-lab.com
+lease 7 12 30
+exit
+ip dhcp excluded-address 192.168.1.97
+ip dhcp pool R2_Client_LAN 
+network 192.168.1.96 255.255.255.240
+default-router 192.168.1.97
+domain-name ccna-lab.com
+lease 7 12 30
+```
+Шаг2: Проверяем выдачу IP адреса на PC-A
