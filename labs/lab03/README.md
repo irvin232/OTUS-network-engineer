@@ -74,7 +74,6 @@ clock timezone msk 3
 banner motd ^C Accessing the device that unauthorized access is prohibited ^C
 wr
 ```
-
 #### Шаг 4: R1 - Настроим g0/0/0 и включим g0/0/1, настроим саб-интерфейсы согласно адресной таблице и пропишем ip route.
 ```
 conf t
@@ -208,21 +207,21 @@ default-router 192.168.1.97
 domain-name ccna-lab.com
 lease 7 12 30
 ```
-#### Шаг2: Проверяем выдачу IP адреса на PC-A
+#### Шаг2: Проверяем выдачу IP адреса на PC-A.
 ![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab03/PC-A.png)
 
-#### Шаг3: Пингуем шлюз
+#### Шаг3: Пингуем шлюз.
 ![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab03/PC-A-ping%20192.168.1.1.png)
 
-#### Часть 3: Конфигурируем и проверяем DHCP relay на R2
+#### Часть 3: Конфигурируем и проверяем DHCP relay на R2.
 
-Шаг1: Добавляем ip helper-address на g0/0/1
+#### Шаг1: Добавляем ip helper-address на g0/0/1.
 ```
 int g0/0/1
 ip helper-address 10.0.0.1
 ```
-#### Шаг2: Проверяем выдачу IP адреса на PC-В
+#### Шаг2: Проверяем выдачу IP адреса на PC-В.
 ![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab03/PС-B.png)
 
-#### Шаг3: Пингуем шлюз
-
+#### Шаг3: Пингуем шлюз.
+![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab03/PС-B%20-%20ping%20192.168.1.97.png)
