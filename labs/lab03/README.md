@@ -56,7 +56,7 @@
 
 ![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab03/scheme%201.png)
 
-#### Шаг 3: Базовая настройка роутеров и коммутаторов:.
+#### Шаг 3: Базовая настройка роутеров и коммутаторов.
 ```
 hostname S1/S2/R1/R2
 no ip domain-lookup
@@ -116,7 +116,7 @@ exit
 ip route 0.0.0.0 0.0.0.0 10.0.0.1
 wr
 ```
-#### Шаг 6: Проверяем статический маршрут между R1 и R2
+#### Шаг 6: Проверяем статический маршрут между R1 и R2.
 ```
 R1#ping 10.0.0.2 
 
@@ -166,7 +166,7 @@ switchport trunk native vlan 1000
 switchport trunk allowed vlan 100,200,1000
 switchport mode trunk
 ```
-#### Шаг 8: S2 - Конфигурируем порты
+#### Шаг 8: S2 - Конфигурируем порты.
 ```
 conf t
 interface range f0/1-24
