@@ -75,7 +75,7 @@ banner motd ^C Accessing the device that unauthorized access is prohibited ^C
 wr
 ```
 
-Шаг 4: Настроим интерфейсы g0/0/0 и g0/0/1 на R1, настроим саб-интерфейсы согласно адресной таблице и пропишем ip route.
+Шаг 4: R1 - Настроим g0/0/0 и включим g0/0/1, настроим саб-интерфейсы согласно адресной таблице и пропишем ip route.
 ```
 conf t
 int g0/0/0
@@ -83,7 +83,6 @@ ip address 10.0.0.1 255.255.255.252
 no shutdown
 exit
 int g0/0/1
-ip address 192.168.1.97 255.255.255.240
 no shutdown
 exit
 int g0/0/1.100
@@ -103,11 +102,11 @@ exit
 ip route 0.0.0.0 0.0.0.0 10.0.0.2
 wr
 ```
-Шаг 5: Настроим интерфейсы g0/0/0 и g0/0/1 на R2 и пропишем ip route.
+Шаг 5: R2 - Настроим g0/0/0, g0/0/1 и пропишем ip route.
 ```
 conf t
 int g0/0/1
-ip address 192.168.1.98 255.255.255.240
+ip address 192.168.1.97 255.255.255.240
 no shutdown
 exit
 int g0/0/0
@@ -127,7 +126,7 @@ Sending 5, 100-byte ICMP Echos to 10.0.0.2, timeout is 2 seconds:
 Success rate is 100 percent (5/5), round-trip min/avg/max = 0/0/1 ms
 ```
 
-Шаг 7: S1 - Создаем VLAN`ы, добавляем шлюз по умолчанию и конфигурируем порты.
+Шаг 7: S1 - Создаем VLAN-ы, добавляем шлюз по умолчанию и конфигурируем порты.
 ```
 conf t
 vlan 100
@@ -144,9 +143,9 @@ name Native
 exit
 int vlan 200
 description Management
-ip address 192.168.1.66 255.255.255.224
+ip address 192.168.1.2 255.255.255.192
 exit
-ip default-gateway 192.168.1.65
+ip default-gateway 192.168.1.1
 interface range f0/1-24
 switchport mode access
 switchport access vlan 999
@@ -168,7 +167,7 @@ switchport trunk native vlan 1000
 switchport trunk allowed vlan 100,200,1000
 switchport mode trunk
 
-Шаг 8: S2
+Шаг 8: S2 - Конфигурируем порты
 conf t
 interface range f0/1-24
 shutdown
@@ -179,4 +178,6 @@ default interface f0/18
 int vlan 1
 description Management
 ip address 192.168.1.66 255.255.255.224
+exit
+ip default-gateway 192.168.1.65
 ```
