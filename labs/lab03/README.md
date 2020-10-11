@@ -177,9 +177,7 @@ shutdown
 default interface f0/5
 default interface f0/18
 int f0/5
-switchport trunk native vlan 1000
-switchport trunk allowed vlan 100,200,1000
-switchport mode trunk
+switchport mode access
 exit
 int f0/18
 switchport mode access
@@ -210,4 +208,18 @@ default-router 192.168.1.97
 domain-name ccna-lab.com
 lease 7 12 30
 ```
-Шаг2: Проверяем выдачу IP адреса на PC-A
+#### Шаг2: Проверяем выдачу IP адреса на PC-A
+![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab03/PC-A.png)
+
+#### Шаг3: Пингуем шлюз
+![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab03/PC-A-ping%20192.168.1.1.png)
+
+#### Часть 3: Конфигурируем и проверяем DHCP relay на R2
+
+Шаг1: Добавляем ip helper-address на g0/0/1
+```
+int g0/0/1
+ip helper-address 10.0.0.1
+```
+Шаг2: Проверяем выдачу IP адреса на PC-В
+![](
