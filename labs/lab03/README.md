@@ -252,6 +252,7 @@ ip helper-address 10.0.0.1
 Часть 5: Настройка и проверка DHCPv6 Relay на R2.
 
 ### Часть 1: Построение сети и настройка основных параметров устройств.
+
 ### Схема сети.
 
 ![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab03/scheme%201.png)
@@ -328,7 +329,7 @@ FastEthernet0 Connection:(default port)
    Default Gateway.................: FE80::1
                                      0.0.0.0
 ```
-### Часть 3 Настройка и проверка Stateless DHCPv6 сервера на R1.
+### Часть 3: Настройка и проверка Stateless DHCPv6 сервера на R1.
 
 #### Шаг 1: Текущая сетевая конфигурация PC-A.
 ```
