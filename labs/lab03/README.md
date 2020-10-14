@@ -36,7 +36,8 @@
 | 999	| Parking_Lot	| S1: F0/1-4, F0/7-24, G0/1-2 |
 | 1000	| Native	| N/A |
 
-#### [Итоговые конфиги оборудования](https://github.com/irvin232/OTUS-network-engineer/tree/master/labs/lab03/Configs).
+#### Конфигурации оборудования
+[Итоговые конфиги оборудования](https://github.com/irvin232/OTUS-network-engineer/tree/master/labs/lab03/Configs).
 
 #### Цели:
 
@@ -247,7 +248,8 @@ ip helper-address 10.0.0.1
 | PC-A	| NIC	| DHCP	|
 | PC-B	| NIC	| DHCP	|
 
-#### [Итоговые конфиги оборудования](https://github.com/irvin232/OTUS-network-engineer/tree/master/labs/lab03/Configs).
+#### Конфигурации оборудования
+[Итоговые конфиги оборудования](https://github.com/irvin232/OTUS-network-engineer/tree/master/labs/lab03/Configs).
 
 #### Цели:
 Часть 1: Построение сети и настройка основных параметров устройств.
