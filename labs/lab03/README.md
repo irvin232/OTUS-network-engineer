@@ -10,7 +10,7 @@
 
 ##### Лабораторная работа выполнена на базе Cisco Packet Tracer.
 
-### Настроить DHCPv4.
+# Настроить DHCPv4.
 
 #### Таблица адресов:
 | Device	| Interface	| IP Address |	Subnet Mask	| Default Gateway |
@@ -227,3 +227,214 @@ ip helper-address 10.0.0.1
 
 #### Шаг3: Пингуем шлюз.
 ![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab03/PС-B%20-%20ping%20192.168.1.97.png)
+
+# Настроить DHCPv6.
+
+#### Таблица адресов:
+
+| Device	| Interface	| IPv6 Address |
+| ------	| --------	| ------------ |
+| R1	| G0/0/0	| 2001:db8:acad:2::1/64	|
+| R1	| G0/0/0	| fe80::1	|
+| R1	| G0/0/1	| 2001:db8:acad:1::1/64	|
+| R1	| G0/0/1	| fe80::1	|
+| R2	| G0/0/0	| 2001:db8:acad:2::2/64	|
+| R2	| G0/0/0	| fe80::2	|
+| R2	| G0/0/1	| 2001:db8:acad:3::1/64	|
+| R2	| G0/0/1	| fe80::1	|
+| PC-A	| NIC	| DHCP	|
+| PC-B	| NIC	| DHCP	|
+
+#### [Итоговые конфиги оборудования](https://github.com/irvin232/OTUS-network-engineer/tree/master/labs/lab03/Configs).
+
+### Часть 1: Настройка оборудования
+
+#### Шаг 1: Базовая настройка оборудования
+```
+hostname S1/S2/R1/R2
+no ip domain-lookup
+enable secret class
+line con 0
+login
+password cisco
+exit
+line vty 0 4
+login
+password cisco
+exit
+service password-encryption
+clock timezone msk 3
+banner motd ^C Accessing the device that unauthorized access is prohibited ^C
+```
+#### Шаг 2: R1 - Добавляем IPv6 на интерфейс g0/0/0 и g0/0/1, добавляем маршрут по умолчанию и включаем ipv6 unicast-routing
+```
+conf t
+int g0/0/0
+ipv6 address 2001:db8:acad:2::1/64
+ipv6 address fe80::1 link-local
+no shutdown
+exit
+int g0/0/1
+ipv6 address 2001:db8:acad:1::1/64
+ipv6 address fe80::1 link-local
+no shutdown
+exit
+ipv6 route ::/0 2001:db8:acad:2::2
+ipv6 unicast-routing
+```
+#### Шаг 3: R2 - Добавляем IPv6 на интерфейс g0/0/0 и g0/0/1, добавляем маршрут по умолчанию и включаем ipv6 unicast-routing
+```
+conf t
+int g0/0/0
+ipv6 address 2001:db8:acad:2::2/64
+ipv6 address fe80::2 link-local
+no shutdown
+exit
+int g0/0/1
+ipv6 address 2001:db8:acad:3::1/64
+ipv6 address fe80::1 link-local
+no shutdown
+exit
+ipv6 route ::/0 2001:db8:acad:2::1
+ipv6 unicast-routing
+```
+#### Шаг 4: Проверяем доступность g0/0/1 на R2 c R1.
+```
+R1#ping ipv6 2001:db8:acad:3::1
+
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 2001:db8:acad:3::1, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 0/0/1 ms
+```
+### Часть 2: Проверка назначения адреса SLAAC от R1.
+
+### Шаг 1: Проверяем, что на PC-A включен автоматический IPv6 и смотрим ipconfig
+```
+C:\>ipconfig
+
+FastEthernet0 Connection:(default port)
+
+   Connection-specific DNS Suffix..: 
+   Link-local IPv6 Address.........: FE80::2D0:BAFF:FE4B:5749
+   IPv6 Address....................: 2001:DB8:ACAD:1:2D0:BAFF:FE4B:5749
+   IPv4 Address....................: 0.0.0.0
+   Subnet Mask.....................: 0.0.0.0
+   Default Gateway.................: FE80::1
+                                     0.0.0.0
+```
+### Часть 3 Настройка и проверка сервера DHCPv6 на R1.
+
+#### Шаг 1: Текущая сетевая конфигурация PC-A.
+```
+C:\>ipconfig /all
+
+FastEthernet0 Connection:(default port)
+
+   Connection-specific DNS Suffix..: 
+   Physical Address................: 00D0.BA4B.5749
+   Link-local IPv6 Address.........: FE80::2D0:BAFF:FE4B:5749
+   IPv6 Address....................: 2001:DB8:ACAD:1:2D0:BAFF:FE4B:5749
+   Autoconfiguration IP Address....: 169.254.87.73
+   Subnet Mask.....................: 255.255.0.0
+   Default Gateway.................: FE80::1
+                                     0.0.0.0
+   DHCP Servers....................: 0.0.0.0
+   DHCPv6 IAID.....................: 
+   DHCPv6 Client DUID..............: 00-01-00-01-C5-32-E2-B3-00-D0-BA-4B-57-49
+   DNS Servers.....................: ::
+                                     0.0.0.0
+```
+#### Шаг 2: Настройка R1 для предоставления stateless DHCPv6 для PC-А.
+```
+conf t
+ipv6 dhcp pool R1-STATELESS
+dns-server 2001:db8:acad::254
+domain-name STATELESS.com
+exit
+interface g0/0/1
+ipv6 nd other-config-flag
+ipv6 dhcp server R1-STATELESS
+exit
+```
+#### Шаг 3: Смотрим ipconfig на PC-A, видим появление настроек с DHCP сервера.
+```
+C:\>ipconfig /all
+
+FastEthernet0 Connection:(default port)
+
+   Connection-specific DNS Suffix..: STATELESS.com 
+   Physical Address................: 00D0.BA4B.5749
+   Link-local IPv6 Address.........: FE80::2D0:BAFF:FE4B:5749
+   IPv6 Address....................: 2001:DB8:ACAD:1:2D0:BAFF:FE4B:5749
+   Autoconfiguration IP Address....: 169.254.87.73
+   Subnet Mask.....................: 255.255.0.0
+   Default Gateway.................: FE80::1
+                                     0.0.0.0
+   DHCP Servers....................: 0.0.0.0
+   DHCPv6 IAID.....................: 1825619641
+   DHCPv6 Client DUID..............: 00-01-00-01-C5-32-E2-B3-00-D0-BA-4B-57-49
+   DNS Servers.....................: 2001:DB8:ACAD::254
+                                     0.0.0.0
+```
+#### Шаг 4: Пингуем c PC-A G0/0/1 на R2.
+```
+C:\>ping 2001:db8:acad:3::1 
+
+Pinging 2001:db8:acad:3::1 with 32 bytes of data:
+
+Reply from 2001:DB8:ACAD:3::1: bytes=32 time<1ms TTL=254
+Reply from 2001:DB8:ACAD:3::1: bytes=32 time<1ms TTL=254
+Reply from 2001:DB8:ACAD:3::1: bytes=32 time<1ms TTL=254
+Reply from 2001:DB8:ACAD:3::1: bytes=32 time=3ms TTL=254
+
+Ping statistics for 2001:DB8:ACAD:3::1:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 3ms, Average = 0ms
+```
+### Часть 4: Настройка stateful DHCPv6 на R1.
+```
+conf t
+ipv6 dhcp pool R2-STATEFUL
+address prefix 2001:db8:acad:3:aaa::/80
+dns-server 2001:db8:acad::254
+domain-name STATEFUL.com
+exit
+interface g0/0/0
+ipv6 dhcp server R2-STATEFUL
+```
+### Часть 5: Конфигурирование и проверка DHCPv6 relay на R2.
+
+#### Шаг 1: Проверяем, что на PC-B включен автоматический IPv6 и смотрим ipconfig/all.
+```
+C:\>ipconfig /all
+
+FastEthernet0 Connection:(default port)
+
+   Connection-specific DNS Suffix..: 
+   Physical Address................: 0001.96E2.030D
+   Link-local IPv6 Address.........: FE80::201:96FF:FEE2:30D
+   IPv6 Address....................: 2001:DB8:ACAD:3:201:96FF:FEE2:30D
+   IPv4 Address....................: 0.0.0.0
+   Subnet Mask.....................: 0.0.0.0
+   Default Gateway.................: FE80::1
+                                     0.0.0.0
+   DHCP Servers....................: 0.0.0.0
+   DHCPv6 IAID.....................: 
+   DHCPv6 Client DUID..............: 00-01-00-01-BC-10-80-50-00-01-96-E2-03-0D
+   DNS Servers.....................: ::
+                                     0.0.0.0
+```
+#### Шаг 2: Конфигурируем R2 в качестве DHCP relay agent для локальной сети на G0/0/1.
+```
+conf t
+interface g0/0/1
+ipv6 nd managed-config-flag
+ipv6 dhcp relay destination 2001:db8:acad:2::1 g0/0/0
+exit
+```
+#### Шаг 3: Попытка получения адреса IPv6 от DHCPv6 на PC-B.
+```
+В Cisco packet tracer на всех маршрутизаторах нет ipv6 dhcp relay. А в EVE-NG нужно разбираться. Поэтому проверить нет возможности. Но должно все заработать.
+```
