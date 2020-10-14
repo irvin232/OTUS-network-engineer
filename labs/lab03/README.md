@@ -259,6 +259,9 @@ ip helper-address 10.0.0.1
 Часть 5: Настройка и проверка DHCPv6 Relay на R2.
 
 ### Часть 1: Построение сети и настройка основных параметров устройств.
+### Схема сети.
+
+![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab03/scheme%201.png)
 
 #### Шаг 1: Базовая настройка оборудования
 ```
