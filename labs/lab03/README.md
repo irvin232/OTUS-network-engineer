@@ -77,11 +77,9 @@ exit
 service password-encryption
 clock timezone msk 3
 banner motd ^C Accessing the device that unauthorized access is prohibited ^C
-wr
 ```
 #### Шаг 4: R1 - Настроим g0/0/0 и включим g0/0/1, настроим саб-интерфейсы согласно адресной таблице и пропишем ip route.
 ```
-conf t
 int g0/0/0
 ip address 10.0.0.1 255.255.255.252
 no shutdown
@@ -104,11 +102,9 @@ description vlan 1000
 encapsulation dot1Q 1000
 exit
 ip route 0.0.0.0 0.0.0.0 10.0.0.2
-wr
 ```
 #### Шаг 5: R2 - Настроим g0/0/0, g0/0/1 и пропишем ip route.
 ```
-conf t
 int g0/0/1
 ip address 192.168.1.97 255.255.255.240
 no shutdown
@@ -118,7 +114,6 @@ ip address 10.0.0.2 255.255.255.252
 no shutdown
 exit
 ip route 0.0.0.0 0.0.0.0 10.0.0.1
-wr
 ```
 #### Шаг 6: Проверяем статический маршрут между R1 и R2.
 ```
@@ -131,7 +126,6 @@ Success rate is 100 percent (5/5), round-trip min/avg/max = 0/0/1 ms
 ```
 #### Шаг 7: S1 - Создаем VLAN-ы, добавляем шлюз по умолчанию и конфигурируем порты.
 ```
-conf t
 vlan 100
 name Clients
 exit
@@ -172,7 +166,6 @@ switchport mode trunk
 ```
 #### Шаг 8: S2 - Конфигурируем порты и добавляем шлюз по умолчанию.
 ```
-conf t
 interface range f0/1-24
 shutdown
 exit
@@ -282,7 +275,6 @@ banner motd ^C Accessing the device that unauthorized access is prohibited ^C
 ```
 #### Шаг 2: R1 - Добавляем IPv6 на интерфейс g0/0/0 и g0/0/1, добавляем маршрут по умолчанию и включаем ipv6 unicast-routing
 ```
-conf t
 int g0/0/0
 ipv6 address 2001:db8:acad:2::1/64
 ipv6 address fe80::1 link-local
@@ -298,7 +290,6 @@ ipv6 unicast-routing
 ```
 #### Шаг 3: R2 - Добавляем IPv6 на интерфейс g0/0/0 и g0/0/1, добавляем маршрут по умолчанию и включаем ipv6 unicast-routing
 ```
-conf t
 int g0/0/0
 ipv6 address 2001:db8:acad:2::2/64
 ipv6 address fe80::2 link-local
@@ -361,7 +352,6 @@ FastEthernet0 Connection:(default port)
 ```
 #### Шаг 2: Настройка R1 для предоставления stateless DHCPv6 для PC-А.
 ```
-conf t
 ipv6 dhcp pool R1-STATELESS
 dns-server 2001:db8:acad::254
 domain-name STATELESS.com
@@ -409,7 +399,6 @@ Approximate round trip times in milli-seconds:
 ```
 ### Часть 4: Настройка и проверка Stateful DHCPv6 сервера на R1.
 ```
-conf t
 ipv6 dhcp pool R2-STATEFUL
 address prefix 2001:db8:acad:3:aaa::/80
 dns-server 2001:db8:acad::254
@@ -442,7 +431,6 @@ FastEthernet0 Connection:(default port)
 ```
 #### Шаг 2: Конфигурируем R2 в качестве DHCP relay agent для локальной сети на G0/0/1.
 ```
-conf t
 interface g0/0/1
 ipv6 nd managed-config-flag
 ipv6 dhcp relay destination 2001:db8:acad:2::1 g0/0/0
