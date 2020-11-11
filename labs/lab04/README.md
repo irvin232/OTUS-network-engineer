@@ -7,9 +7,8 @@
   1. Разработаем и задокументируем адресное пространство для лабораторного стенда.
   2. Задокументируем стыковочные сети.
   3. Задокументируем выделенные IP-адреса.
-  4. Приведем пример настройки.
-  5. Ссылка на конфигурации оборудования.
-  6. Итоговая схема.
+  4. Ссылка на конфигурации оборудования, основные шаги настройки оборудования и приведем примеры настройки.
+  5. Итоговая схема.
 
 ### Часть 1: Разработаем и задокументируем адресное пространство для лабораторного стенда.
 
@@ -17,13 +16,15 @@
   
   1.1.0.0/21 – Стыковочные сети.
   
-  172.16.0.0/21 – Сети управления.
+  172.16.0.0/21 – Сети управления. Последний актет на каждом оборудовании сопадает с цифрой в имени оборудования.
   
   192.168.0.0/21 – Пользовательские сети для VPC.
   
   IPv6
   
-  ac10:ffff::/48 - для каждого сегмента выделяем посеть с /64 префиксом.
+  ac10:ffff::/48 - для каждого сегмента выделяем посеть с /64 префиксом. Последний актет на каждом оборудовании сопадает с цифрой в имени оборудования.
+  
+  FE80::* - link-local адреса совпадают с цифрой в имени оборудования.
   
 ### Часть 2: Задокументируем стыковочные сети.
 
@@ -229,111 +230,168 @@ SW3|Int vlan 10|IPv6|ac10:ffff:0:10a1::3/64|ac10:ffff:0:10a1::/64|Сеть уп�
 SW2|Int vlan 10|IPv4|172.16.0.2/24|172.16.0.0/24|Сеть управления Москва
 SW2|Int vlan 10|IPv6|ac10:ffff:0:10a1::2/64|ac10:ffff:0:10a1::/64|Сеть управления Москва
 
+### Часть 4: Ссылка на конфигурации оборудования, основные шаги настройки оборудования и приведем примеры настройки.
 
+[Итоговые конфигурации оборудования](https://github.com/irvin232/OTUS-network-engineer/tree/master/labs/lab04/Configs).
 
+#### Основные шаги для маршрутизаторов:
+  - Включаем ipv6 unicast-routing.
+  - Присваиваем IPv4 и IPv6 адреса на интерфейсах.
+  - Включаем интерфейсы.
+#### Основные шаги для коммутаторов:
+  - Добавляем VLAN-ы.
+  - Настраиваем uplink-и в trunk.
+  - Настраиваем интерфейсы для VPC в access.
+  - Присваиваем IPv4 и IPv6 адреса на VLAN интерфейсах.
+#### Основные шаги для VPC:
+  - Присваиваем IPv4 адреса для VPC статикой, а для IPv6 способом SLAAC.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#### Шаг 2: Определим на каком оборудовании и порту будут шлюзы и присвоим им IP адреса.
-
-AS 1001 - R13
-```
-e0/0.10 – 172.16.0.1
-e0/0.11 - 192.168.0.1
-```
-AS 2042 - R17
-```
-e0/0.20 – 172.16.1.1
-e0/0.21 - 192.168.1.1
-```
-Чокурдах
-```
-e0/2.30 – 172.16.2.1
-e0/2.31 - 192.168.2.1
-```
-#### Шаг 3: Присвоим IP адреса коммутаторам и VPC.
-
-Адреса будут в последнем октете иметь цифру, совпадающую с номером коммутатора на схеме, например, для коммутатора SW2 адрес будет иметь вид 172.16.0.2.
-
-Адреса VPC будут первыми двумя цифрами после шлюза.
-
-#### Шаг 4: Нанесем все данные схему.
-![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab04/lab04.png)
-
-### Часть 2: Настройка оборудования.
-
-#### Шаг 1: Присвоим имя и настроим ip адреса на каждом активном порту маршрутизаторов по примеру настройки порта e0/2 на R13:
-```
-hostname R13
-int e0/2
-ip address 1.1.1.22 255.255.255.252
-no shutdown
-```
-#### Шаг 2: Настроим шлюзы для сетей управления и сетей пользователей по примеру настройки порта e0/0 на R13:
-```
-int e0/0
-no shutdown
+#### Пример настройки маршрутизатора R12, на котором терминируются шлюзы Москвы и настроен HSRP с R13.
+````
+ipv6 unicast-routing
+interface Ethernet0/0
+ no ip address
+ ipv6 address FE80::12 link-local
+ no shutdown
 exit
-int e0/0.10
-description vlan 10
-encapsulation dot1Q 10
-ip address 172.16.0.1 255.255.255.192
+interface Ethernet0/0.10
+ description vlan 10
+ encapsulation dot1Q 10
+ ip address 172.16.0.12 255.255.255.0
+ standby version 2
+ standby 1 ip 172.16.0.1
+ standby 1 priority 50
+ standby 1 preempt
+ standby 2 ipv6 autoconfig
+ standby 2 priority 50
+ standby 2 preempt
+ ipv6 address AC10:FFFF:0:10A1::12/64
 exit
-int e0/0.11
-description vlan 11
-encapsulation dot1Q 11
-ip address 192.168.0.1 255.255.255.192
+interface Ethernet0/0.11
+ description vlan 11
+ encapsulation dot1Q 11
+ ip address 192.168.0.3 255.255.255.0
+ standby version 2
+ standby 1 ip 192.168.0.1
+ standby 1 priority 50
+ standby 1 preempt
+ standby 2 ipv6 autoconfig
+ standby 2 priority 50
+ standby 2 preempt
+ ipv6 address AC10:FFFF:0:10B1::12/64
 exit
-```
-#### Шаг 3: Добавим vlanы на коммутаторах, настроим интерфейсы для управления, транковые порты и порты доступа по примеру настройки SW2:
-```
+interface Ethernet0/0.12
+ description vlan 12
+ encapsulation dot1Q 12
+ ip address 192.168.1.3 255.255.255.0
+ standby version 2
+ standby 3 ip 192.168.1.1
+ standby 3 priority 50
+ standby 3 preempt
+ standby 4 ipv6 autoconfig
+ standby 4 priority 50
+ standby 4 preempt
+ ipv6 address AC10:FFFF:0:10C1::12/64
+exit
+interface Ethernet0/1
+ ip address 1.1.1.25 255.255.255.252
+ ipv6 address FE80::12 link-local
+ no shutdown
+exit
+interface Ethernet0/2
+ ip address 1.1.1.6 255.255.255.252
+ ipv6 address FE80::12 link-local
+ no shutdown
+exit
+interface Ethernet0/3
+ ip address 1.1.1.14 255.255.255.252
+ ipv6 address FE80::12 link-local
+ no shutdown
+exit
+````
+#### Пример настройки маршрутизатора R14, с менеджментом на Loopback0 интерфейсе.
+````
+ipv6 unicast-routing
+interface Loopback0
+ ip address 172.16.0.14 255.255.255.255
+ ipv6 address AC10:FFFF:0:10A1::14/128
+ no shutdown
+exit
+interface Ethernet0/0
+ ip address 1.1.1.5 255.255.255.252
+ ipv6 address FE80::14 link-local
+ no shutdown
+exit
+interface Ethernet0/1
+ ip address 1.1.1.9 255.255.255.252
+ ipv6 address FE80::14 link-local
+ no shutdown
+exit
+interface Ethernet0/2
+ ip address 1.1.0.2 255.255.255.252
+ ipv6 address FE80::14 link-local
+ no shutdown
+exit
+interface Ethernet0/3
+ ip address 1.1.1.1 255.255.255.252
+ ipv6 address FE80::14 link-local
+  no shutdown
+exit
+````
+#### Пример настройки коммутатора SW4.
+````
 vlan 10
 name MGMT
-exit
 vlan 11
-name Clients
+name VPC1
+vlan 12
+name VPC7
 exit
-int vlan 10
-description Management
-ip address 172.16.0.2 255.255.255.0
+interface Port-channel1
+ switchport trunk allowed vlan 10-12
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+exit
+interface Ethernet0/0
+ switchport trunk allowed vlan 10-12
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+exit
+interface Ethernet0/1
+ switchport trunk allowed vlan 10-12
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+exit
+interface Ethernet0/2
+ switchport trunk allowed vlan 10-12
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 1 mode active
+exit
+interface Ethernet0/3
+ switchport trunk allowed vlan 10-12
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 1 mode active
+exit
+interface Ethernet1/0
+ switchport trunk allowed vlan 10-12
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+exit
+interface Vlan10
+ description Management
+ ip address 172.16.0.4 255.255.255.0
+ ipv6 address FE80::4 link-local
+ ipv6 address AC10:FFFF:0:10A1::4/64
 no shutdown
-int e0/0
-switchport trunk encapsulation dot1q
-switchport mode trunk
-switchport trunk allowed vlan 10,11
 exit
-int e0/1
-switchport trunk encapsulation dot1q
-switchport mode trunk
-switchport trunk allowed vlan 10,11
-int e0/2
-switchport mode access
-switchport access vlan 11
-exit
-```
-#### Шаг 4: Назначим статические IP адреса для VPC на примере VPC7
-```
-ip 192.168.0.3/24 192.168.0.1
-```
-
-Name|Port|Protocol|Address|Network|Description
-----|----|--------|-------|-------|----------
-R22|e0/0|IPv4|1.1.0.1|1.1.0.0/30|to R14
-R22|e0/0|IPv6|ac10:ffff:0:1::1/64|ac10:ffff:0:1::/64|to R14
-R22|e0/1|IPv4|1.1.0.9|1.1.0.8/30|to R21
-R22|e0/1|IPv6|ac10:ffff:0:3::1/64|ac10:ffff:0:3::/64|to R21
-R22|e0/2|IPv4|1.1.0.13|1.1.0.12/30|to R23
-R22|e0/2|IPv6|ac10:ffff:0:4::1/64|ac10:ffff:0:4::/64|to R23
+ip default-gateway 172.16.0.1
+````
+#### Пример настройки VPC1.
+````
+ip 192.168.0.4/24 255.255.255.0
+````
+### Часть 5: Итоговая схема.
+![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab04/lab04.png)
 
