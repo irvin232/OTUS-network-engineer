@@ -1,0 +1,113 @@
+R17#sh run
+Building configuration...
+
+Current configuration : 1228 bytes
+!
+! Last configuration change at 19:54:59 EET Tue Nov 10 2020
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R17
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+clock timezone EET 2 0
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+
+
+!
+!
+!
+!
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 172.16.1.17 255.255.255.255
+ ipv6 address AC10:FFFF:0:2A42::17/128
+!
+interface Ethernet0/0
+ ip address 1.1.2.9 255.255.255.252
+ ipv6 address FE80::17 link-local
+!
+interface Ethernet0/1
+ ip address 1.1.2.2 255.255.255.252
+ ipv6 address FE80::17 link-local
+!
+interface Ethernet0/2
+ ip address 1.1.2.13 255.255.255.252
+ ipv6 address FE80::17 link-local
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 192.168.2.0 255.255.255.0 1.1.2.10
+ip route 192.168.3.0 255.255.255.0 1.1.2.14
+!
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+
+R17#
