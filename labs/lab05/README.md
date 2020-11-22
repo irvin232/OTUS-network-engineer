@@ -122,24 +122,51 @@ ip sla 2
  frequency 5
 exit
 ip sla schedule 2 life forever start-time now
+ip sla 3
+ icmp-echo AC10:FFFF:0:9::1 source-ip AC10:FFFF:0:9::2
+ frequency 5
+exit
+ip sla schedule 3 life forever start-time now
+ip sla 4
+ icmp-echo AC10:FFFF:0:10::1 source-ip AC10:FFFF:0:10::2
+ frequency 5
+ exit
+ip sla schedule 4 life forever start-time now
 track 1 ip sla 1 reachability
 track 2 ip sla 2 reachability
+track 3 ip sla 3 reachability
+track 3 ip sla 3 reachability
 ip access-list extended vlan31
  permit ip 192.168.4.0 0.0.0.255 any
 exit
 ip access-list extended vlan32
  permit ip 192.168.5.0 0.0.0.255 any
 exit
+ipv6 access-list vlan31_ipv6
+ permit ipv6 AC10:FFFF:0:30B3::/64 any
+exit
+ipv6 access-list vlan32_ipv6
+ permit ipv6 AC10:FFFF:0:30C3::/64 any
+exit
 route-map PBR permit 10
  match ip address vlan31
  set ip next-hop verify-availability 1.1.0.49 10 track 1
  set ip next-hop verify-availability 1.1.0.57 20 track 2
+exit
+route-map PBR permit 15
+ match ipv6 address vlan31_ipv6
+ set ipv6 next-hop AC10:FFFF:0:9::2 10 track 3
+ set ipv6 next-hop AC10:FFFF:0:10::2 20 track 4
 exit
 route-map PBR permit 20
  match ip address vlan32
  set ip next-hop verify-availability 1.1.0.57 10 track 2
  set ip next-hop verify-availability 1.1.0.49 20 track 1
 exit
+route-map PBR permit 25
+ match ipv6 address vlan32_ipv6
+ set ipv6 next-hop AC10:FFFF:0:10::2 10 track 4
+ set ipv6 next-hop AC10:FFFF:0:9::2 20 track 3
 interface Ethernet0/2.31
  ip policy route-map PBR
 exit
@@ -148,7 +175,10 @@ interface Ethernet0/2.32
 exit
 ```
 #### 3.2 Проверим работоспособность.
-Для проверки мы будем делать трассировку до IP-адреса интерфейса маршрутизатора Лабытнанги R27 `1.1.0.42`
+
+Работоспособность IPv6 мы проверить не можем, т.к. есть ограничения в EVE-NG.
+
+Для проверки IPv4 мы будем делать трассировку до IP-адреса интерфейса маршрутизатора Лабытнанги R27 `1.1.0.42`
 
 VPC30
 ```
