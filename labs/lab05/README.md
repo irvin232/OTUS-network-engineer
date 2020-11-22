@@ -135,7 +135,7 @@ ip sla schedule 4 life forever start-time now
 track 1 ip sla 1 reachability
 track 2 ip sla 2 reachability
 track 3 ip sla 3 reachability
-track 3 ip sla 3 reachability
+track 4 ip sla 4 reachability
 ip access-list extended vlan31
  permit ip 192.168.4.0 0.0.0.255 any
 exit
@@ -167,6 +167,7 @@ route-map PBR permit 25
  match ipv6 address vlan32_ipv6
  set ipv6 next-hop AC10:FFFF:0:10::2 10 track 4
  set ipv6 next-hop AC10:FFFF:0:9::2 20 track 3
+exit
 interface Ethernet0/2.31
  ip policy route-map PBR
 exit
