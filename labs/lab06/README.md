@@ -177,3 +177,44 @@ interface Ethernet0/2
  ipv6 ospf 1 area 0
  exit
  ```
+### Часть 3: Настроим R12 и R13 в Area 10 и проверим получение маршрута по-умолчанию.
+
+R12
+```
+ interface Ethernet0/1
+  ip ospf 1 area 10
+  ipv6 ospf 1 area 10
+ exit
+ interface Ethernet0/0.10
+   ip ospf 1 area 10
+   ipv6 ospf 1 area 10
+  exit
+   interface Ethernet0/0.11
+   ip ospf 1 area 10
+   ipv6 ospf 1 area 10
+  exit
+   interface Ethernet0/0.12
+   ip ospf 1 area 10
+   ipv6 ospf 1 area 10
+  exit
+ ```
+ R13
+```
+ interface Ethernet0/1
+  ip ospf 1 area 10
+  ipv6 ospf 1 area 10
+ exit
+ interface Ethernet0/0.10
+   ip ospf 1 area 10
+   ipv6 ospf 1 area 10
+  exit
+   interface Ethernet0/0.11
+   ip ospf 1 area 10
+   ipv6 ospf 1 area 10
+  exit
+   interface Ethernet0/0.12
+   ip ospf 1 area 10
+   ipv6 ospf 1 area 10
+  exit
+ ```
+ Проверим получение маршрута по-умолчанию на примере R12
