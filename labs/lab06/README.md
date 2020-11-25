@@ -407,7 +407,7 @@ L   FF00::/8 [0/0]
 
 Блокирование маршрутов сетей зоны 101 будем делать двумя разными способами, т.к. `filter-list` для IPv6 в EVE-NG походу не доступен. Ну и плюс опыт применения двух разных методов для блокировки маршрутов.
 
-#### Часть 5.1: Добавим на R15 `filter-list`, что бы блокировать маршруты сетей IPv4 зоны 101.
+5.1: Добавим на R15 `filter-list`, что бы блокировать маршруты сетей IPv4 зоны 101.
 ```
 ip prefix-list Deny-area101 seq 5 deny 1.1.1.0/30
 ip prefix-list Deny-area101 seq 10 permit 0.0.0.0/0 le 32
@@ -415,7 +415,7 @@ router ospf 1
  area 102 filter-list prefix Deny-area101 in
 exit
 ```
-#### Часть 5.2: Добавим на R20 `distribute-list` , что бы блокировать маршруты сетей IPv6 зоны 101.
+5.2: Добавим на R20 `distribute-list` , что бы блокировать маршруты сетей IPv6 зоны 101.
 ```
 ipv6 prefix-list Deny-area101-ipv6 seq 5 deny AC10:FFFF:0:1011::/64
 ipv6 prefix-list Deny-area101-ipv6 seq 10 permit ::/0 le 128
@@ -423,7 +423,8 @@ ipv6 router ospf 1
  distribute-list prefix-list Deny-area101-ipv6 in
 exit
 ```
-#### Часть 5.3: Проверим, что R20 получает все маршруты, кроме маршрутов до сетей зоны 101.
+5.3: Проверим, что R20 получает все маршруты, кроме маршрутов до сетей зоны 101.
+
 IPv4
 ```
 R20#sh ip route
