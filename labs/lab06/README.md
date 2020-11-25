@@ -245,6 +245,7 @@ R12
   exit
  ```
  Проверим получение маршрутов, плюс маршрута по-умолчанию на примере R12.
+ IPv4
  ```
  R12#sh ip route
 Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
@@ -283,6 +284,7 @@ L        192.168.0.3/32 is directly connected, Ethernet0/0.11
 C        192.168.1.0/24 is directly connected, Ethernet0/0.12
 L        192.168.1.3/32 is directly connected, Ethernet0/0.12
 ```
+IPv6
 ```
 R12#sh ipv6 route
 IPv6 Routing Table - default - 19 entries
@@ -362,6 +364,8 @@ interface Ethernet0/0
 exit
 ```
 Проверим, что R19 получает только маршрут по умолчанию.
+
+IPv4
 ```
 R19#sh ip route
 Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
@@ -382,6 +386,7 @@ L        1.1.1.2/32 is directly connected, Ethernet0/0
       172.16.0.0/32 is subnetted, 1 subnets
 C        172.16.0.19 is directly connected, Loopback0
 ```
+IPv6
 ```
 R19# sh ipv6 route
 IPv6 Routing Table - default - 5 entries
