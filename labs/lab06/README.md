@@ -29,9 +29,11 @@
 
 5. Настройка Area 102 и проверка, что R20 получает все маршруты, кроме маршрутов до сетей зоны 101.
 
-5.1 Добавим на `router ospf 1` `filter-list` на R15, что бы блокировать маршруты сетей зоны 101 и проверим, что он получает все маршруты, кроме маршрутов до сетей зоны 101.
+5.1 Добавим на R15 `filter-list`, что бы блокировать маршруты сетей IPv4 зоны 101.
 
-5.2 Добавим на ipv6 `router ospf 1` `distribute-list` на R20, что бы блокировать маршруты сетей зоны 101 и проверим, что он получает все маршруты, кроме маршрутов до сетей зоны 101. Т.к. `filter-list` для ipv6 на EVE-NG походу не поддерживается.
+5.2 Добавим на R20 `distribute-list`, что бы блокировать маршруты сетей IPv6 зоны 101.
+
+5.3 Проверим, что R20 получает все маршруты, кроме маршрутов до сетей зоны 101.
 
 ### Часть 1: Предоставим таблицы стыковочных сетей, выделенных IP-адресов, схему и конфигурации оборудования. 
 
@@ -398,6 +400,98 @@ L   AC10:FFFF:0:1011::2/128 [0/0]
      via Ethernet0/0, receive
 LC  AC10:FFFF:0:10A1::19/128 [0/0]
      via Loopback0, receive
+L   FF00::/8 [0/0]
+     via Null0, receive
+```
+### Часть 5: Настройка Area 102 и проверка, что R20 получает все маршруты, кроме маршрутов до сетей зоны 101.
+
+Блокирование маршрутов сетей зоны 101 будем делать двумя разными способами, т.к. `filter-list` для IPv6 в EVE-NG походу не доступен. Ну и плюс опыт применения двух разных методов для блокировки маршрутов.
+
+#### Часть 5.1: Добавим на R15 `filter-list`, что бы блокировать маршруты сетей IPv4 зоны 101.
+```
+ip prefix-list Deny-area101 seq 5 deny 1.1.1.0/30
+ip prefix-list Deny-area101 seq 10 permit 0.0.0.0/0 le 32
+router ospf 1
+ area 102 filter-list prefix Deny-area101 in
+exit
+```
+#### Часть 5.2: Добавим на R20 `distribute-list` , что бы блокировать маршруты сетей IPv6 зоны 101.
+```
+ipv6 prefix-list Deny-area101-ipv6 seq 5 deny AC10:FFFF:0:1011::/64
+ipv6 prefix-list Deny-area101-ipv6 seq 10 permit ::/0 le 128
+ipv6 router ospf 1
+ distribute-list prefix-list Deny-area101-ipv6 in
+exit
+```
+#### Часть 5.3: Проверим, что R20 получает все маршруты, кроме маршрутов до сетей зоны 101.
+IPv4
+```
+R20#sh ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       + - replicated route, % - next hop override
+
+Gateway of last resort is 1.1.1.21 to network 0.0.0.0
+
+O*E2  0.0.0.0/0 [110/10] via 1.1.1.21, 22:49:52, Ethernet0/0
+      1.0.0.0/8 is variably subnetted, 9 subnets, 2 masks
+O IA     1.1.0.0/30 [110/40] via 1.1.1.21, 22:49:57, Ethernet0/0
+O IA     1.1.0.4/30 [110/20] via 1.1.1.21, 22:49:57, Ethernet0/0
+O IA     1.1.1.4/30 [110/30] via 1.1.1.21, 22:49:57, Ethernet0/0
+O IA     1.1.1.8/30 [110/30] via 1.1.1.21, 22:49:57, Ethernet0/0
+O IA     1.1.1.12/30 [110/20] via 1.1.1.21, 22:49:57, Ethernet0/0
+O IA     1.1.1.16/30 [110/20] via 1.1.1.21, 22:49:57, Ethernet0/0
+C        1.1.1.20/30 is directly connected, Ethernet0/0
+L        1.1.1.22/32 is directly connected, Ethernet0/0
+O IA     1.1.1.24/30 [110/30] via 1.1.1.21, 22:49:57, Ethernet0/0
+      172.16.0.0/16 is variably subnetted, 2 subnets, 2 masks
+O IA     172.16.0.0/24 [110/30] via 1.1.1.21, 22:49:57, Ethernet0/0
+C        172.16.0.20/32 is directly connected, Loopback0
+O IA  192.168.0.0/24 [110/30] via 1.1.1.21, 22:49:57, Ethernet0/0
+O IA  192.168.1.0/24 [110/30] via 1.1.1.21, 22:49:57, Ethernet0/0
+```
+IPv6
+```
+R20#sh ipv6 route
+IPv6 Routing Table - default - 14 entries
+Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
+       B - BGP, HA - Home Agent, MR - Mobile Router, R - RIP
+       H - NHRP, I1 - ISIS L1, I2 - ISIS L2, IA - ISIS interarea
+       IS - ISIS summary, D - EIGRP, EX - EIGRP external, NM - NEMO
+       ND - ND Default, NDp - ND Prefix, DCE - Destination, NDr - Redirect
+       O - OSPF Intra, OI - OSPF Inter, OE1 - OSPF ext 1, OE2 - OSPF ext 2
+       ON1 - OSPF NSSA ext 1, ON2 - OSPF NSSA ext 2, l - LISP
+OE2 ::/0 [110/1], tag 1
+     via FE80::15, Ethernet0/0
+OI  AC10:FFFF:0:2::/64 [110/20]
+     via FE80::15, Ethernet0/0
+OI  AC10:FFFF:0:1021::/64 [110/30]
+     via FE80::15, Ethernet0/0
+OI  AC10:FFFF:0:1031::/64 [110/30]
+     via FE80::15, Ethernet0/0
+OI  AC10:FFFF:0:1041::/64 [110/20]
+     via FE80::15, Ethernet0/0
+OI  AC10:FFFF:0:1051::/64 [110/20]
+     via FE80::15, Ethernet0/0
+C   AC10:FFFF:0:1061::/64 [0/0]
+     via Ethernet0/0, directly connected
+L   AC10:FFFF:0:1061::2/128 [0/0]
+     via Ethernet0/0, receive
+OI  AC10:FFFF:0:1071::/64 [110/30]
+     via FE80::15, Ethernet0/0
+OI  AC10:FFFF:0:10A1::/64 [110/30]
+     via FE80::15, Ethernet0/0
+LC  AC10:FFFF:0:10A1::20/128 [0/0]
+     via Loopback0, receive
+OI  AC10:FFFF:0:10B1::/64 [110/30]
+     via FE80::15, Ethernet0/0
+OI  AC10:FFFF:0:10C1::/64 [110/30]
+     via FE80::15, Ethernet0/0
 L   FF00::/8 [0/0]
      via Null0, receive
 ```
