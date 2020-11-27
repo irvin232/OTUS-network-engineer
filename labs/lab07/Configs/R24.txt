@@ -1,9 +1,9 @@
 R24#sh run
 Building configuration...
 
-Current configuration : 2557 bytes
+Current configuration : 2644 bytes
 !
-! Last configuration change at 22:28:50 EET Fri Nov 27 2020
+! Last configuration change at 00:04:58 EET Sat Nov 28 2020
 version 15.2
 service timestamps debug datetime msec
 service timestamps log datetime msec
@@ -105,32 +105,33 @@ interface Ethernet1/3
 router isis
  net 49.0024.0024.0024.0024.00
  redistribute static ip route-map Permit_to_Distribute
+ default-information originate
 !
 ip forward-protocol nd
 !
 !
 no ip http server
 no ip http secure-server
-ip route 172.16.0.0 255.255.255.0 1.1.0.17
-ip route 172.16.1.0 255.255.255.0 1.1.0.26
-ip route 172.16.5.0 255.255.255.0 1.1.0.17
-ip route 172.16.6.0 255.255.255.0 1.1.0.17
-ip route 192.168.0.0 255.255.254.0 1.1.0.17
-ip route 192.168.2.0 255.255.254.0 1.1.0.26
+ip route 172.16.0.0 255.255.255.0 1.1.0.17 105
+ip route 172.16.1.0 255.255.255.0 1.1.0.26 105
+ip route 172.16.5.0 255.255.255.0 1.1.0.17 105
+ip route 172.16.6.0 255.255.255.0 1.1.0.17 105
+ip route 192.168.0.0 255.255.254.0 1.1.0.17 105
+ip route 192.168.2.0 255.255.254.0 1.1.0.26 105
 !
 ip access-list extended out_subnet
  permit ip 1.1.0.0 0.0.7.255 any
  permit ip 172.16.0.0 0.0.7.255 any
  permit ip 192.168.0.0 0.0.7.255 any
 !
-ipv6 route AC10:FFFF:0:10A1::/64 AC10:FFFF:0:5::1
-ipv6 route AC10:FFFF:0:10B1::/64 AC10:FFFF:0:5::1
-ipv6 route AC10:FFFF:0:10C1::/64 AC10:FFFF:0:5::1
-ipv6 route AC10:FFFF:0:2A42::/64 AC10:FFFF:0:6::2
-ipv6 route AC10:FFFF:0:2B42::/64 AC10:FFFF:0:6::2
-ipv6 route AC10:FFFF:0:2C42::/64 AC10:FFFF:0:6::2
-ipv6 route AC10:FFFF:0:60A6::/64 AC10:FFFF:0:5::1
-ipv6 route AC10:FFFF:0:70A7::/64 AC10:FFFF:0:5::1
+ipv6 route AC10:FFFF:0:10A1::/64 AC10:FFFF:0:5::1 105
+ipv6 route AC10:FFFF:0:10B1::/64 AC10:FFFF:0:5::1 105
+ipv6 route AC10:FFFF:0:10C1::/64 AC10:FFFF:0:5::1 105
+ipv6 route AC10:FFFF:0:2A42::/64 AC10:FFFF:0:6::2 105
+ipv6 route AC10:FFFF:0:2B42::/64 AC10:FFFF:0:6::2 105
+ipv6 route AC10:FFFF:0:2C42::/64 AC10:FFFF:0:6::2 105
+ipv6 route AC10:FFFF:0:60A6::/64 AC10:FFFF:0:5::1 105
+ipv6 route AC10:FFFF:0:70A7::/64 AC10:FFFF:0:5::1 105
 !
 route-map Permit_to_Distribute permit 10
  match ip address out_subnet
