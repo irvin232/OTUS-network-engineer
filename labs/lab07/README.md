@@ -266,7 +266,7 @@ ipv6 route AC10:ffff:0:10A1::/64 AC10:ffff:0:5::1
 ipv6 route AC10:ffff:0:10B1::/64 AC10:ffff:0:5::1
 ipv6 route AC10:ffff:0:10C1::/64 AC10:ffff:0:5::1
 ```
-23
+R23
 ```
 ip access-list extended out_subnet
 permit ip 1.1.0.0 0.0.7.255 any
