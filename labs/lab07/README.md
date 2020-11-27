@@ -30,6 +30,8 @@
 
 5. Проверим соседство на всех маршрутизаторах.
 
+6. Настроим статические маршруты и перераспределение внешних маршрутов (route redistribution) в isis.
+
 ### Часть 1: Предоставим таблицы стыковочных сетей, выделенных IP-адресов, схему и конфигурации оборудования. 
 
 #### 1.1 Таблица стыковочных сетей.
@@ -177,4 +179,117 @@ R26#sh isis neighbors
 System Id      Type Interface   IP Address      State Holdtime Circuit Id
 R24            L2   Et0/0       1.1.3.9         UP    20       R26.02           
 R25            L2   Et0/2       1.1.3.5         UP    26       R26.01           
+```
+### Часть 6: Настроим статические маршруты и перераспределение внешних маршрутов (route redistribution) в isis.
+R25
+```
+ip access-list extended out_subnet
+permit ip 1.1.0.0 0.0.7.255 any
+permit ip 172.16.0.0 0.0.7.255 any
+permit ip 192.168.0.0 0.0.7.255 any
+exit
+ipv6 access-list out_subnet_ipv6
+permit ipv6 ac10:ffff::/48 any
+exit
+route-map Permit_to_Distribute
+match ip address out_subnet
+match ipv6 address out_subnet_ipv6
+exit
+router isis
+redistribute static ip route-map Permit_to_Distribute
+exit
+ip route 172.16.2.0 255.255.255.0 1.1.0.50
+ip route 172.16.3.0 255.255.255.0 1.1.0.42 
+ip route 192.168.4.0 255.255.254.0 1.1.0.50
+ipv6 route AC10:FFFF:0:30A3::/64 AC10:FFFF:0:9::2
+ipv6 route AC10:FFFF:0:30B3::/64 AC10:FFFF:0:9::2
+ipv6 route AC10:FFFF:0:30C3::/64 AC10:FFFF:0:9::2
+ipv6 route AC10:FFFF:0:40A4::/64 AC10:FFFF:0:8::2
+```
+R26
+```
+ip access-list extended out_subnet
+permit ip 1.1.0.0 0.0.7.255 any
+permit ip 172.16.0.0 0.0.7.255 any
+permit ip 192.168.0.0 0.0.7.255 any
+exit
+ipv6 access-list out_subnet_ipv6
+permit ipv6 ac10:ffff::/48 any
+exit
+route-map Permit_to_Distribute
+match ip address out_subnet
+match ipv6 address out_subnet_ipv6
+exit
+router isis
+redistribute static ip route-map Permit_to_Distribute
+exit
+ip route 172.16.1.0 255.255.255.0 1.1.0.34
+ip route 172.16.2.0 255.255.255.0 1.1.0.58
+ip route 192.168.2.0 255.255.254.0 1.1.0.34
+ip route 192.168.4.0 255.255.254.0 1.1.0.58
+ipv6 route AC10:FFFF:0:30A3::/64 AC10:FFFF:0:10::2
+ipv6 route AC10:FFFF:0:30B3::/64 AC10:FFFF:0:10::2
+ipv6 route AC10:FFFF:0:30C3::/64 AC10:FFFF:0:10::2
+ipv6 route AC10:ffff:0:2A42::/64 AC10:ffff:0:7::2
+ipv6 route AC10:ffff:0:2B42::/64 AC10:ffff:0:7::2
+ipv6 route AC10:ffff:0:2C42::/64 AC10:ffff:0:7::2
+```
+R24
+```
+ip access-list extended out_subnet
+permit ip 1.1.0.0 0.0.7.255 any
+permit ip 172.16.0.0 0.0.7.255 any
+permit ip 192.168.0.0 0.0.7.255 any
+exit
+ipv6 access-list out_subnet_ipv6
+permit ipv6 ac10:ffff::/48 any
+exit
+route-map Permit_to_Distribute
+match ip address out_subnet
+match ipv6 address out_subnet_ipv6
+exit
+router isis
+redistribute static ip route-map Permit_to_Distribute
+exit
+ip route 172.16.0.0 255.255.255.0 1.1.0.17
+ip route 172.16.1.0 255.255.255.0 1.1.0.26
+ip route 172.16.5.0 255.255.255.0 1.1.0.17
+ip route 172.16.6.0 255.255.255.0 1.1.0.17
+ip route 192.168.0.0 255.255.254.0 1.1.0.17
+ip route 192.168.2.0 255.255.254.0 1.1.0.26
+ipv6 route AC10:ffff:0:2A42::/64 AC10:ffff:0:6::2
+ipv6 route AC10:ffff:0:2B42::/64 AC10:ffff:0:6::2
+ipv6 route AC10:ffff:0:2C42::/64 AC10:ffff:0:6::2
+ipv6 route AC10:ffff:0:60A6::/64 AC10:ffff:0:5::1
+ipv6 route AC10:ffff:0:70A7::/64 AC10:ffff:0:5::1
+ipv6 route AC10:ffff:0:10A1::/64 AC10:ffff:0:5::1
+ipv6 route AC10:ffff:0:10B1::/64 AC10:ffff:0:5::1
+ipv6 route AC10:ffff:0:10C1::/64 AC10:ffff:0:5::1
+```
+23
+```
+ip access-list extended out_subnet
+permit ip 1.1.0.0 0.0.7.255 any
+permit ip 172.16.0.0 0.0.7.255 any
+permit ip 192.168.0.0 0.0.7.255 any
+exit
+ipv6 access-list out_subnet_ipv6
+permit ipv6 ac10:ffff::/48 any
+exit
+route-map Permit_to_Distribute
+match ip address out_subnet
+match ipv6 address out_subnet_ipv6
+exit
+router isis
+redistribute static ip route-map Permit_to_Distribute
+exit
+ip route 172.16.0.0 255.255.255.0 1.1.0.13
+ip route 172.16.5.0 255.255.255.0 1.1.0.13
+ip route 172.16.6.0 255.255.255.0 1.1.0.13
+ip route 192.168.0.0 255.255.254.0 1.1.0.13
+ipv6 route AC10:ffff:0:60A6::/64 AC10:ffff:0:4::1
+ipv6 route AC10:ffff:0:70A7::/64 AC10:ffff:0:4::1
+ipv6 route AC10:ffff:0:10A1::/64 AC10:ffff:0:4::1
+ipv6 route AC10:ffff:0:10B1::/64 AC10:ffff:0:4::1
+ipv6 route AC10:ffff:0:10C1::/64 AC10:ffff:0:4::1
 ```
