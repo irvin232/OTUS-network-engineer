@@ -35,6 +35,8 @@
 
 5.3 Проверим, что R20 получает все маршруты, кроме маршрутов до сетей зоны 101.
 
+6. Настроим перераспределение внешних маршрутов (route redistribution) в ospf на R14 и R15.
+
 ### Часть 1: Предоставим таблицы стыковочных сетей, выделенных IP-адресов, схему и конфигурации оборудования. 
 
 #### 1.1 Таблица стыковочных сетей.
@@ -140,10 +142,6 @@ interface Ethernet0/1
  ip ospf 1 area 0
  ipv6 ospf 1 area 0
 exit
-interface Ethernet0/2
- ip ospf 1 area 0
- ipv6 ospf 1 area 0
-exit
 ```
 R14
 ```
@@ -164,11 +162,6 @@ interface Ethernet0/1
  ip ospf 1 area 0
  ipv6 ospf 1 area 0
 exit
-interface Ethernet0/2
- ip ospf 1 area 0
- ipv6 ospf 1 area 0
-exit
-
 ```
 R12
 ```
@@ -501,4 +494,26 @@ OI  AC10:FFFF:0:10C1::/64 [110/30]
      via FE80::15, Ethernet0/0
 L   FF00::/8 [0/0]
      via Null0, receive
+```
+### Часть 6: Настроим перераспределение внешних маршрутов (route redistribution) в ospf на R14 и R15.
+На обоих маршрутизаторах повторяем настройки.
+```
+ip access-list extended out_subnet
+permit ip 1.1.0.0 0.0.7.255 any
+permit ip 172.16.0.0 0.0.7.255 any
+permit ip 192.168.0.0 0.0.7.255 any
+exit
+ipv6 access-list out_subnet_ipv6
+permit ipv6 ac10:ffff::/48 any
+exit
+route-map Permit_to_Distribute
+match ip address out_subnet
+match ipv6 address out_subnet_ipv6
+exit
+router ospf 1
+redistribute static subnets route-map Permit_to_Distribute
+exit
+ipv6 router ospf 1
+redistribute static route-map Permit_to_Distribute
+exit
 ```
