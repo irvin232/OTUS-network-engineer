@@ -1,9 +1,9 @@
 R26#sh run
 Building configuration...
 
-Current configuration : 2572 bytes
+Current configuration : 2603 bytes
 !
-! Last configuration change at 22:26:17 EET Fri Nov 27 2020
+! Last configuration change at 23:22:53 EET Fri Nov 27 2020
 !
 version 15.5
 service timestamps debug datetime msec
@@ -123,6 +123,7 @@ interface Ethernet1/3
 router isis
  net 49.0026.0026.0026.0026.00
  redistribute static ip route-map Permit_to_Distribute
+ default-information originate
 !
 ip forward-protocol nd
 !
