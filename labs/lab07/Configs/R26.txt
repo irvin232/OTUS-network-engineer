@@ -1,9 +1,9 @@
 R26#sh run
 Building configuration...
 
-Current configuration : 1766 bytes
+Current configuration : 2572 bytes
 !
-! Last configuration change at 21:58:06 EET Wed Nov 25 2020
+! Last configuration change at 22:26:17 EET Fri Nov 27 2020
 !
 version 15.5
 service timestamps debug datetime msec
@@ -122,16 +122,38 @@ interface Ethernet1/3
 !
 router isis
  net 49.0026.0026.0026.0026.00
+ redistribute static ip route-map Permit_to_Distribute
 !
 ip forward-protocol nd
 !
 !
 no ip http server
 no ip http secure-server
+ip route 172.16.1.0 255.255.255.0 1.1.0.34
+ip route 172.16.2.0 255.255.255.0 1.1.0.58
+ip route 192.168.2.0 255.255.254.0 1.1.0.34
 ip route 192.168.4.0 255.255.254.0 1.1.0.58
 !
+ip access-list extended out_subnet
+ permit ip 1.1.0.0 0.0.7.255 any
+ permit ip 172.16.0.0 0.0.7.255 any
+ permit ip 192.168.0.0 0.0.7.255 any
+!
+ipv6 route AC10:FFFF:0:2A42::/64 AC10:FFFF:0:7::2
+ipv6 route AC10:FFFF:0:2B42::/64 AC10:FFFF:0:7::2
+ipv6 route AC10:FFFF:0:2C42::/64 AC10:FFFF:0:7::2
+ipv6 route AC10:FFFF:0:30A3::/64 AC10:FFFF:0:10::2
+ipv6 route AC10:FFFF:0:30B3::/64 AC10:FFFF:0:10::2
+ipv6 route AC10:FFFF:0:30C3::/64 AC10:FFFF:0:10::2
+!
+route-map Permit_to_Distribute permit 10
+ match ip address out_subnet
+ match ipv6 address out_subnet_ipv6
 !
 !
+!
+ipv6 access-list out_subnet_ipv6
+ permit ipv6 AC10:FFFF::/48 any
 !
 control-plane
 !
@@ -152,3 +174,4 @@ line vty 0 4
 !
 end
 
+R26#
