@@ -1,9 +1,9 @@
 R23#sh run
 Building configuration...
 
-Current configuration : 2320 bytes
+Current configuration : 2351 bytes
 !
-! Last configuration change at 22:29:56 EET Fri Nov 27 2020
+! Last configuration change at 00:07:25 EET Sat Nov 28 2020
 version 15.2
 service timestamps debug datetime msec
 service timestamps log datetime msec
@@ -105,6 +105,7 @@ interface Ethernet1/3
 router isis
  net 49.2222.0023.0023.0023.00
  redistribute static ip route-map Permit_to_Distribute
+ default-information originate
 !
 ip forward-protocol nd
 !
