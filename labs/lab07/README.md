@@ -197,13 +197,14 @@ match ipv6 address out_subnet_ipv6
 exit
 router isis
 redistribute static ip route-map Permit_to_Distribute
+default-information originate
 exit
-ip route 172.16.2.0 255.255.255.0 1.1.0.50
+ip route 172.16.2.0 255.255.255.0 1.1.0.50 105
 ip route 172.16.3.0 255.255.255.0 1.1.0.42 
-ip route 192.168.4.0 255.255.254.0 1.1.0.50
-ipv6 route AC10:FFFF:0:30A3::/64 AC10:FFFF:0:9::2
-ipv6 route AC10:FFFF:0:30B3::/64 AC10:FFFF:0:9::2
-ipv6 route AC10:FFFF:0:30C3::/64 AC10:FFFF:0:9::2
+ip route 192.168.4.0 255.255.254.0 1.1.0.50 105
+ipv6 route AC10:FFFF:0:30A3::/64 AC10:FFFF:0:9::2 105
+ipv6 route AC10:FFFF:0:30B3::/64 AC10:FFFF:0:9::2 105
+ipv6 route AC10:FFFF:0:30C3::/64 AC10:FFFF:0:9::2 105
 ipv6 route AC10:FFFF:0:40A4::/64 AC10:FFFF:0:8::2
 ```
 R26
@@ -222,6 +223,7 @@ match ipv6 address out_subnet_ipv6
 exit
 router isis
 redistribute static ip route-map Permit_to_Distribute
+default-information originate
 exit
 ip route 172.16.1.0 255.255.255.0 1.1.0.34
 ip route 172.16.2.0 255.255.255.0 1.1.0.58
@@ -250,21 +252,22 @@ match ipv6 address out_subnet_ipv6
 exit
 router isis
 redistribute static ip route-map Permit_to_Distribute
+default-information originate
 exit
-ip route 172.16.0.0 255.255.255.0 1.1.0.17
-ip route 172.16.1.0 255.255.255.0 1.1.0.26
-ip route 172.16.5.0 255.255.255.0 1.1.0.17
-ip route 172.16.6.0 255.255.255.0 1.1.0.17
-ip route 192.168.0.0 255.255.254.0 1.1.0.17
-ip route 192.168.2.0 255.255.254.0 1.1.0.26
-ipv6 route AC10:ffff:0:2A42::/64 AC10:ffff:0:6::2
-ipv6 route AC10:ffff:0:2B42::/64 AC10:ffff:0:6::2
-ipv6 route AC10:ffff:0:2C42::/64 AC10:ffff:0:6::2
-ipv6 route AC10:ffff:0:60A6::/64 AC10:ffff:0:5::1
-ipv6 route AC10:ffff:0:70A7::/64 AC10:ffff:0:5::1
-ipv6 route AC10:ffff:0:10A1::/64 AC10:ffff:0:5::1
-ipv6 route AC10:ffff:0:10B1::/64 AC10:ffff:0:5::1
-ipv6 route AC10:ffff:0:10C1::/64 AC10:ffff:0:5::1
+ip route 172.16.0.0 255.255.255.0 1.1.0.17 105
+ip route 172.16.1.0 255.255.255.0 1.1.0.26 105
+ip route 172.16.5.0 255.255.255.0 1.1.0.17 105
+ip route 172.16.6.0 255.255.255.0 1.1.0.17 105
+ip route 192.168.0.0 255.255.254.0 1.1.0.17 105
+ip route 192.168.2.0 255.255.254.0 1.1.0.26 105
+ipv6 route AC10:ffff:0:2A42::/64 AC10:ffff:0:6::2 105
+ipv6 route AC10:ffff:0:2B42::/64 AC10:ffff:0:6::2 105
+ipv6 route AC10:ffff:0:2C42::/64 AC10:ffff:0:6::2 105
+ipv6 route AC10:ffff:0:60A6::/64 AC10:ffff:0:5::1 105
+ipv6 route AC10:ffff:0:70A7::/64 AC10:ffff:0:5::1 105
+ipv6 route AC10:ffff:0:10A1::/64 AC10:ffff:0:5::1 105
+ipv6 route AC10:ffff:0:10B1::/64 AC10:ffff:0:5::1 105
+ipv6 route AC10:ffff:0:10C1::/64 AC10:ffff:0:5::1 105
 ```
 R23
 ```
@@ -282,6 +285,7 @@ match ipv6 address out_subnet_ipv6
 exit
 router isis
 redistribute static ip route-map Permit_to_Distribute
+default-information originate
 exit
 ip route 172.16.0.0 255.255.255.0 1.1.0.13
 ip route 172.16.5.0 255.255.255.0 1.1.0.13
