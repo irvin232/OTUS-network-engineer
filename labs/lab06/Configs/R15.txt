@@ -1,9 +1,9 @@
 R15#sh run
 Building configuration...
 
-Current configuration : 1862 bytes
+Current configuration : 2254 bytes
 !
-! Last configuration change at 21:08:22 EET Wed Nov 25 2020
+! Last configuration change at 21:38:11 EET Fri Nov 27 2020
 version 15.2
 service timestamps debug datetime msec
 service timestamps log datetime msec
@@ -81,10 +81,8 @@ interface Ethernet0/1
 !
 interface Ethernet0/2
  ip address 1.1.0.6 255.255.255.252
- ip ospf 1 area 0
  ipv6 address FE80::15 link-local
  ipv6 address AC10:FFFF:0:2::2/64
- ipv6 ospf 1 area 0
 !
 interface Ethernet0/3
  ip address 1.1.1.21 255.255.255.252
@@ -96,6 +94,7 @@ interface Ethernet0/3
 router ospf 1
  router-id 15.15.15.15
  area 102 filter-list prefix Deny-area101 in
+ redistribute static subnets route-map Permit_to_Distribute
  default-information originate
 !
 ip forward-protocol nd
@@ -105,6 +104,11 @@ no ip http server
 no ip http secure-server
 ip route 0.0.0.0 0.0.0.0 1.1.0.5 105
 !
+ip access-list extended out_subnet
+ permit ip 1.1.0.0 0.0.7.255 any
+ permit ip 172.16.0.0 0.0.7.255 any
+ permit ip 192.168.0.0 0.0.7.255 any
+!
 !
 ip prefix-list Deny-area101 seq 5 deny 1.1.1.0/30
 ip prefix-list Deny-area101 seq 10 permit 0.0.0.0/0 le 32
@@ -112,9 +116,17 @@ ipv6 route ::/0 AC10:FFFF:0:2::1 105
 ipv6 router ospf 1
  router-id 15.15.15.15
  default-information originate
+ redistribute static route-map Permit_to_Distribute
+!
+!
+route-map Permit_to_Distribute permit 10
+ match ip address out_subnet
+ match ipv6 address out_subnet_ipv6
 !
 !
 !
+ipv6 access-list out_subnet_ipv6
+ permit ipv6 AC10:FFFF::/48 any
 !
 control-plane
 !
