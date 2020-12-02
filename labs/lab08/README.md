@@ -108,5 +108,91 @@ VPC|eth0|IPv6|autoconfig|ac10:ffff:0:2c42::/64|Пользовательская 
 
 ### Часть 2: Настроим EIGRP на R18 и распространим с него маршрут по умолчанию. Хоть и заблаговременно, но проверим что он получает суммарные префиксы.
 
+R18
+```
+router eigrp AS2042
+ address-family ipv4 unicast autonomous-system 1
+  eigrp router-id 18.18.18.18
+  network 1.1.2.0 0.0.0.31
+  network 172.16.1.0 0.0.0.255
+  af-interface Ethernet0/1
+   summary-address 0.0.0.0 0.0.0.0
+  exit
+  af-interface Ethernet0/0
+   summary-address 0.0.0.0 0.0.0.0
+  exit
+ exit
+ address-family ipv6 unicast autonomous-system 1
+  eigrp router-id 18.18.18.18
+  af-interface Ethernet0/1
+   summary-address ::/0
+  exit
+  af-interface Ethernet0/0
+   summary-address ::/0
+  exit
+ exit
+exit
+```
+IPv4
+```
+R18#sh ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       + - replicated route, % - next hop override
 
+Gateway of last resort is 0.0.0.0 to network 0.0.0.0
 
+D*    0.0.0.0/0 is a summary, 01:46:25, Null0
+      1.0.0.0/8 is variably subnetted, 10 subnets, 5 masks
+S        1.0.0.0/8 [1/0] via 1.1.0.24
+C        1.1.0.24/29 is directly connected, Ethernet0/2
+L        1.1.0.26/32 is directly connected, Ethernet0/2
+C        1.1.0.32/29 is directly connected, Ethernet0/3
+L        1.1.0.34/32 is directly connected, Ethernet0/3
+D        1.1.2.0/27 [90/1536000] via 1.1.2.6, 01:53:35, Ethernet0/0
+                    [90/1536000] via 1.1.2.2, 01:53:35, Ethernet0/1
+C        1.1.2.0/30 is directly connected, Ethernet0/1
+L        1.1.2.1/32 is directly connected, Ethernet0/1
+C        1.1.2.4/30 is directly connected, Ethernet0/0
+L        1.1.2.5/32 is directly connected, Ethernet0/0
+      172.16.0.0/16 is variably subnetted, 2 subnets, 2 masks
+D        172.16.1.0/24 [90/1024640] via 1.1.2.6, 01:48:16, Ethernet0/0
+                       [90/1024640] via 1.1.2.2, 01:48:16, Ethernet0/1
+C        172.16.1.18/32 is directly connected, Loopback0
+D     192.168.2.0/23 [90/1541120] via 1.1.2.6, 01:52:01, Ethernet0/0
+                     [90/1541120] via 1.1.2.2, 01:52:01, Ethernet0/1
+```
+IPv6
+```
+R18#sh ipv6 route
+IPv6 Routing Table - default - 8 entries
+Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
+       B - BGP, HA - Home Agent, MR - Mobile Router, R - RIP
+       H - NHRP, I1 - ISIS L1, I2 - ISIS L2, IA - ISIS interarea
+       IS - ISIS summary, D - EIGRP, EX - EIGRP external, NM - NEMO
+       ND - ND Default, NDp - ND Prefix, DCE - Destination, NDr - Redirect
+       O - OSPF Intra, OI - OSPF Inter, OE1 - OSPF ext 1, OE2 - OSPF ext 2
+       ON1 - OSPF NSSA ext 1, ON2 - OSPF NSSA ext 2, l - LISP
+D   ::/0 [5/1280]
+     via Null0, directly connected
+D   AC10:FFFF::/48 [90/1024640]
+     via FE80::16, Ethernet0/0
+     via FE80::17, Ethernet0/1
+C   AC10:FFFF:0:6::/64 [0/0]
+     via Ethernet0/2, directly connected
+L   AC10:FFFF:0:6::2/128 [0/0]
+     via Ethernet0/2, receive
+C   AC10:FFFF:0:7::/64 [0/0]
+     via Ethernet0/3, directly connected
+L   AC10:FFFF:0:7::2/128 [0/0]
+     via Ethernet0/3, receive
+LC  AC10:FFFF:0:2A42::18/128 [0/0]
+     via Loopback0, receive
+L   FF00::/8 [0/0]
+     via Null0, receive
+```
