@@ -196,3 +196,285 @@ LC  AC10:FFFF:0:2A42::18/128 [0/0]
 L   FF00::/8 [0/0]
      via Null0, receive
 ```
+### Часть 3: Настроим EIGRP на R16 и R17. Добавим анонсы суммарных префиксов. Проверим суммарные префиксы и маршрут по умолчанию.
+
+Настройки для R16 и R17 идентичны, за исключением `router-id`. Ниже пример настройки R16.
+```
+router eigrp AS2042
+ address-family ipv4 unicast autonomous-system 1
+  network 1.1.2.0 0.0.0.31
+  network 172.16.1.0 0.0.0.255
+  eigrp router-id 16.16.16.16
+  af-interface Ethernet0/1
+   summary-address 1.1.2.0 255.255.255.224
+   summary-address 172.16.1.0 255.255.255.0
+   summary-address 192.168.2.0 255.255.254.0
+  exit
+  af-interface Ethernet0/3
+   summary-address 1.1.2.0 255.255.255.224
+   summary-address 172.16.1.0 255.255.255.0
+   summary-address 192.168.2.0 255.255.254.0
+  exit
+  af-interface Ethernet0/0
+   summary-address 1.1.2.0 255.255.255.224
+   summary-address 172.16.1.0 255.255.255.0
+   summary-address 192.168.2.0 255.255.254.0
+  exit
+  af-interface Ethernet0/2
+   summary-address 1.1.2.0 255.255.255.224
+   summary-address 172.16.1.0 255.255.255.0
+   summary-address 192.168.2.0 255.255.254.0
+  exit
+ exit
+ address-family ipv6 unicast autonomous-system 1
+  eigrp router-id 16.16.16.16
+  af-interface Ethernet0/0
+   summary-address AC10:FFFF::/48
+  exit
+  af-interface Ethernet0/1
+   summary-address AC10:FFFF::/48
+  exit
+  af-interface Ethernet0/2
+   summary-address AC10:FFFF::/48
+  exit
+  af-interface Ethernet0/3
+   summary-address AC10:FFFF::/48
+  exit
+ exit
+exit
+```
+Проверим суммарные префиксы и маршрут по умолчанию на примере R16.
+
+IPv4
+```
+R16#sh ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       + - replicated route, % - next hop override
+
+Gateway of last resort is 1.1.2.5 to network 0.0.0.0
+
+D*    0.0.0.0/0 [90/1024640] via 1.1.2.5, 01:04:49, Ethernet0/1
+      1.0.0.0/8 is variably subnetted, 12 subnets, 3 masks
+D        1.1.2.0/27 is a summary, 01:04:49, Null0
+C        1.1.2.4/30 is directly connected, Ethernet0/1
+L        1.1.2.6/32 is directly connected, Ethernet0/1
+D        1.1.2.8/30 [90/1536000] via 1.1.2.18, 01:04:49, Ethernet0/2
+D        1.1.2.12/30 [90/1536000] via 1.1.2.22, 01:05:09, Ethernet0/0
+C        1.1.2.16/30 is directly connected, Ethernet0/2
+L        1.1.2.17/32 is directly connected, Ethernet0/2
+C        1.1.2.20/30 is directly connected, Ethernet0/0
+L        1.1.2.21/32 is directly connected, Ethernet0/0
+C        1.1.2.24/30 is directly connected, Ethernet0/3
+L        1.1.2.25/32 is directly connected, Ethernet0/3
+D        1.1.2.28/30 [90/1536000] via 1.1.2.22, 01:04:49, Ethernet0/0
+                     [90/1536000] via 1.1.2.18, 01:04:49, Ethernet0/2
+      172.16.0.0/16 is variably subnetted, 5 subnets, 2 masks
+D        172.16.1.0/24 is a summary, 01:04:49, Null0
+D        172.16.1.9/32 [90/1024640] via 1.1.2.18, 01:04:49, Ethernet0/2
+D        172.16.1.10/32 [90/1024640] via 1.1.2.22, 01:05:09, Ethernet0/0
+C        172.16.1.16/32 is directly connected, Loopback0
+D        172.16.1.32/32 [90/1024640] via 1.1.2.26, 00:56:44, Ethernet0/3
+D     192.168.2.0/23 is a summary, 01:04:49, Null0
+D     192.168.2.0/24 [90/1029120] via 1.1.2.18, 01:04:49, Ethernet0/2
+D     192.168.3.0/24 [90/1029120] via 1.1.2.22, 01:05:09, Ethernet0/0
+```
+IPv6
+```
+R16#sh ipv6 route
+IPv6 Routing Table - default - 9 entries
+Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
+       B - BGP, HA - Home Agent, MR - Mobile Router, R - RIP
+       H - NHRP, I1 - ISIS L1, I2 - ISIS L2, IA - ISIS interarea
+       IS - ISIS summary, D - EIGRP, EX - EIGRP external, NM - NEMO
+       ND - ND Default, NDp - ND Prefix, DCE - Destination, NDr - Redirect
+       O - OSPF Intra, OI - OSPF Inter, OE1 - OSPF ext 1, OE2 - OSPF ext 2
+       ON1 - OSPF NSSA ext 1, ON2 - OSPF NSSA ext 2, l - LISP
+D   ::/0 [90/1024640]
+     via FE80::18, Ethernet0/1
+D   AC10:FFFF::/48 [5/1280]
+     via Null0, directly connected
+D   AC10:FFFF:0:2A42::9/128 [90/1024640]
+     via FE80::9, Ethernet0/2
+D   AC10:FFFF:0:2A42::10/128 [90/1024640]
+     via FE80::10, Ethernet0/0
+LC  AC10:FFFF:0:2A42::16/128 [0/0]
+     via Loopback0, receive
+D   AC10:FFFF:0:2A42::32/128 [90/1024640]
+     via FE80::32, Ethernet0/3
+D   AC10:FFFF:0:2B42::/64 [90/1029120]
+     via FE80::9, Ethernet0/2
+D   AC10:FFFF:0:2C42::/64 [90/1029120]
+     via FE80::10, Ethernet0/0
+L   FF00::/8 [0/0]
+     via Null0, receive
+```
+### Часть 4: Настроим EIGRP на R32 и добавим настройки, что бы он получал только маршрут по-умолчанию. Проверим что он получает только маршрут по умолчанию.
+
+R32
+```
+ip prefix-list FILTER-EIGRP seq 5 deny 1.1.2.0/27 le 32
+ip prefix-list FILTER-EIGRP seq 10 deny 172.16.1.0/24 le 32
+ip prefix-list FILTER-EIGRP seq 15 deny 192.168.2.0/23 le 32
+ip prefix-list FILTER-EIGRP seq 20 permit 0.0.0.0/0 le 32
+ipv6 prefix-list FILTER-EIGRP-IPV6 seq 5 deny AC10:FFFF::/48 le 128
+ipv6 prefix-list FILTER-EIGRP-IPV6 seq 10 permit ::/0 le 128
+router eigrp AS2042
+ address-family ipv4 unicast autonomous-system 1
+  network 1.1.2.0 0.0.0.31
+  network 172.16.1.0 0.0.0.255
+  eigrp router-id 32.32.32.32
+  topology base
+   distribute-list prefix FILTER-EIGRP in
+  exit
+ exit
+ address-family ipv6 unicast autonomous-system 1
+  eigrp router-id 32.32.32.32
+  topology base
+   distribute-list prefix-list FILTER-EIGRP-IPV6 in
+  exit
+ exit
+exit
+```
+Проверим что он получает только маршрут по умолчанию.
+
+IPv4
+```
+R32#sh ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       + - replicated route, % - next hop override
+
+Gateway of last resort is 1.1.2.25 to network 0.0.0.0
+
+D*    0.0.0.0/0 [90/1536640] via 1.1.2.25, 01:00:29, Ethernet0/0
+      1.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        1.1.2.24/30 is directly connected, Ethernet0/0
+L        1.1.2.26/32 is directly connected, Ethernet0/0
+      172.16.0.0/32 is subnetted, 1 subnets
+C        172.16.1.32 is directly connected, Loopback0
+```
+IPv6
+```
+R32#sh ipv6 route
+IPv6 Routing Table - default - 3 entries
+Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
+       B - BGP, HA - Home Agent, MR - Mobile Router, R - RIP
+       H - NHRP, I1 - ISIS L1, I2 - ISIS L2, IA - ISIS interarea
+       IS - ISIS summary, D - EIGRP, EX - EIGRP external, NM - NEMO
+       ND - ND Default, NDp - ND Prefix, DCE - Destination, NDr - Redirect
+       O - OSPF Intra, OI - OSPF Inter, OE1 - OSPF ext 1, OE2 - OSPF ext 2
+       ON1 - OSPF NSSA ext 1, ON2 - OSPF NSSA ext 2, l - LISP
+D   ::/0 [90/1536640]
+     via FE80::16, Ethernet0/0
+LC  AC10:FFFF:0:2A42::32/128 [0/0]
+     via Loopback0, receive
+L   FF00::/8 [0/0]
+     via Null0, receive
+```
+### Часть 5: Настроим EIGRP на SW9 и SW10. Проверим что они получают суммарные префиксы и маршрут по умолчанию.
+
+SW9
+```
+router eigrp AS2042
+ address-family ipv4 unicast autonomous-system 1
+  network 1.1.2.0 0.0.0.31
+  network 172.16.1.0 0.0.0.255
+  network 192.168.2.0
+  eigrp router-id 9.9.9.9
+ exit
+ address-family ipv6 unicast autonomous-system 1
+  eigrp router-id 9.9.9.9
+ exit
+exit
+```
+SW10
+```
+router eigrp AS2042
+ address-family ipv4 unicast autonomous-system 1
+  network 1.1.2.0 0.0.0.31
+  network 172.16.1.0 0.0.0.255
+  network 192.168.3.0
+  eigrp router-id 10.10.10.10
+ exit
+ address-family ipv6 unicast autonomous-system 1
+  eigrp router-id 10.10.10.10
+ exit
+exit
+```
+Проверим что они получают суммарные префиксы и маршрут по умолчанию на примере SW9.
+
+IPv4
+```
+SW9#sh ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override
+
+Gateway of last resort is 1.1.2.17 to network 0.0.0.0
+
+D*    0.0.0.0/0 [90/1536640] via 1.1.2.17, 01:14:19, Ethernet1/0
+                [90/1536640] via 1.1.2.9, 01:14:19, Ethernet0/3
+      1.0.0.0/8 is variably subnetted, 7 subnets, 3 masks
+D        1.1.2.0/27 [90/1536000] via 1.1.2.17, 01:14:19, Ethernet1/0
+                    [90/1536000] via 1.1.2.9, 01:14:19, Ethernet0/3
+C        1.1.2.8/30 is directly connected, Ethernet0/3
+L        1.1.2.10/32 is directly connected, Ethernet0/3
+C        1.1.2.16/30 is directly connected, Ethernet1/0
+L        1.1.2.18/32 is directly connected, Ethernet1/0
+C        1.1.2.28/30 is directly connected, Port-channel1
+L        1.1.2.29/32 is directly connected, Port-channel1
+      172.16.0.0/16 is variably subnetted, 2 subnets, 2 masks
+D        172.16.1.0/24 [90/1024640] via 1.1.2.17, 01:14:19, Ethernet1/0
+                       [90/1024640] via 1.1.2.9, 01:14:19, Ethernet0/3
+C        172.16.1.9/32 is directly connected, Loopback0
+D     192.168.2.0/23 [90/1541120] via 1.1.2.17, 01:14:19, Ethernet1/0
+                     [90/1541120] via 1.1.2.9, 01:14:19, Ethernet0/3
+      192.168.2.0/24 is variably subnetted, 2 subnets, 2 masks
+C        192.168.2.0/24 is directly connected, Vlan21
+L        192.168.2.1/32 is directly connected, Vlan21
+```
+IPv6
+```
+SW9#sh ipv6 route
+IPv6 Routing Table - default - 6 entries
+Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
+       B - BGP, R - RIP, I1 - ISIS L1, I2 - ISIS L2
+       IA - ISIS interarea, IS - ISIS summary, D - EIGRP, EX - EIGRP external
+       ND - ND Default, NDp - ND Prefix, DCE - Destination, NDr - Redirect
+       RL - RPL, O - OSPF Intra, OI - OSPF Inter, OE1 - OSPF ext 1
+       OE2 - OSPF ext 2, ON1 - OSPF NSSA ext 1, ON2 - OSPF NSSA ext 2
+       a - Application
+D   ::/0 [90/1536640]
+     via FE80::17, Ethernet0/3
+     via FE80::16, Ethernet1/0
+D   AC10:FFFF::/48 [90/1024640]
+     via FE80::16, Ethernet1/0
+     via FE80::17, Ethernet0/3
+LC  AC10:FFFF:0:2A42::9/128 [0/0]
+     via Loopback0, receive
+C   AC10:FFFF:0:2B42::/64 [0/0]
+     via Vlan21, directly connected
+L   AC10:FFFF:0:2B42::1/128 [0/0]
+     via Vlan21, receive
+L   FF00::/8 [0/0]
+     via Null0, receive
+```
+
+
