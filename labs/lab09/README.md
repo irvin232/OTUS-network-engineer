@@ -271,6 +271,166 @@ router bgp 50
  ```
 ### Часть 4: Проверим IP доступность между офисами Москва и С.-Петербург.
 
+Выделенные IP адеса для VPC:
+
+VPC1
+```
+PC1 : 192.168.0.4 255.255.255.0 gateway 192.168.0.1
+PC1 : ac10:ffff:0:10b1:2050:79ff:fe66:6801/64
+```
+VPC7
+```
+PC1 : 192.168.1.4 255.255.255.0 gateway 192.168.1.1
+PC1 : ac10:ffff:0:10c1:2050:79ff:fe66:6807/64
+```
+VPC8
+```
+PC1 : 192.168.2.2 255.255.255.0 gateway 192.168.2.1
+PC1 : ac10:ffff:0:2b42:2050:79ff:fe66:6808/64
+```
+VPC
+```
+PC1 : 192.168.3.2 255.255.255.0 gateway 192.168.3.1
+PC1 : ac10:ffff:0:2c42:2050:79ff:fe66:680b/64
+```
+Проверим связанность VPC Москвы с каждым VPC С.-Петербург и наоборот:
+VPC1
+```
+VPCS> ping 192.168.2.2
+
+84 bytes from 192.168.2.2 icmp_seq=1 ttl=57 time=4.040 ms
+84 bytes from 192.168.2.2 icmp_seq=2 ttl=57 time=5.003 ms
+84 bytes from 192.168.2.2 icmp_seq=3 ttl=57 time=6.865 ms
+84 bytes from 192.168.2.2 icmp_seq=4 ttl=57 time=5.010 ms
+84 bytes from 192.168.2.2 icmp_seq=5 ttl=57 time=4.130 ms
+
+VPCS> ping 192.168.3.2
+
+84 bytes from 192.168.3.2 icmp_seq=1 ttl=57 time=4.162 ms
+84 bytes from 192.168.3.2 icmp_seq=2 ttl=57 time=3.795 ms
+84 bytes from 192.168.3.2 icmp_seq=3 ttl=57 time=4.176 ms
+84 bytes from 192.168.3.2 icmp_seq=4 ttl=57 time=4.157 ms
+84 bytes from 192.168.3.2 icmp_seq=5 ttl=57 time=4.057 ms
+
+VPCS> ping ac10:ffff:0:2b42:2050:79ff:fe66:6808
+
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=1 ttl=50 time=41.084 ms
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=2 ttl=50 time=3.281 ms
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=3 ttl=50 time=4.481 ms
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=4 ttl=50 time=3.751 ms
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=5 ttl=50 time=3.680 ms
+
+VPCS> ping ac10:ffff:0:2c42:2050:79ff:fe66:680b
+
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=1 ttl=50 time=27.655 ms
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=2 ttl=50 time=4.304 ms
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=3 ttl=50 time=4.409 ms
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=4 ttl=50 time=4.300 ms
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=5 ttl=50 time=5.150 ms
+```
+VPC7
+```
+VPCS> ping 192.168.2.2
+
+84 bytes from 192.168.2.2 icmp_seq=1 ttl=57 time=5.789 ms
+84 bytes from 192.168.2.2 icmp_seq=2 ttl=57 time=2.758 ms
+84 bytes from 192.168.2.2 icmp_seq=3 ttl=57 time=3.279 ms
+84 bytes from 192.168.2.2 icmp_seq=4 ttl=57 time=4.576 ms
+84 bytes from 192.168.2.2 icmp_seq=5 ttl=57 time=3.732 ms
+
+VPCS> ping 192.168.3.2
+
+84 bytes from 192.168.3.2 icmp_seq=1 ttl=57 time=4.929 ms
+84 bytes from 192.168.3.2 icmp_seq=2 ttl=57 time=3.437 ms
+84 bytes from 192.168.3.2 icmp_seq=3 ttl=57 time=4.140 ms
+84 bytes from 192.168.3.2 icmp_seq=4 ttl=57 time=3.726 ms
+84 bytes from 192.168.3.2 icmp_seq=5 ttl=57 time=3.066 ms
+
+VPCS> ping ac10:ffff:0:2b42:2050:79ff:fe66:6808
+
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=1 ttl=50 time=4.114 ms
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=2 ttl=50 time=3.362 ms
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=3 ttl=50 time=3.417 ms
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=4 ttl=50 time=2.902 ms
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=5 ttl=50 time=3.798 ms
+
+VPCS> ping ac10:ffff:0:2c42:2050:79ff:fe66:680b
+
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=1 ttl=50 time=13.792 ms
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=2 ttl=50 time=4.894 ms
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=3 ttl=50 time=3.980 ms
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=4 ttl=50 time=3.129 ms
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=5 ttl=50 time=4.482 ms
+```
+VPC8
+```
+VPCS> ping 192.168.0.4
+
+84 bytes from 192.168.0.4 icmp_seq=1 ttl=57 time=6.181 ms
+84 bytes from 192.168.0.4 icmp_seq=2 ttl=57 time=3.281 ms
+84 bytes from 192.168.0.4 icmp_seq=3 ttl=57 time=5.083 ms
+84 bytes from 192.168.0.4 icmp_seq=4 ttl=57 time=3.405 ms
+84 bytes from 192.168.0.4 icmp_seq=5 ttl=57 time=4.335 ms
+
+VPCS> ping 192.168.1.4
+
+84 bytes from 192.168.1.4 icmp_seq=1 ttl=57 time=6.776 ms
+84 bytes from 192.168.1.4 icmp_seq=2 ttl=57 time=2.969 ms
+84 bytes from 192.168.1.4 icmp_seq=3 ttl=57 time=3.684 ms
+84 bytes from 192.168.1.4 icmp_seq=4 ttl=57 time=3.818 ms
+84 bytes from 192.168.1.4 icmp_seq=5 ttl=57 time=4.781 ms
+
+VPCS> ping ac10:ffff:0:10b1:2050:79ff:fe66:6801
+
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=1 ttl=50 time=9.879 ms
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=2 ttl=50 time=3.274 ms
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=3 ttl=50 time=4.099 ms
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=4 ttl=50 time=3.450 ms
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=5 ttl=50 time=3.453 ms
+
+VPCS> ping ac10:ffff:0:10c1:2050:79ff:fe66:6807
+
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=1 ttl=50 time=3.145 ms
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=2 ttl=50 time=2.739 ms
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=3 ttl=50 time=3.463 ms
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=4 ttl=50 time=3.056 ms
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=5 ttl=50 time=3.036 ms
+```
+VPC
+```
+VPCS> ping 192.168.0.4
+
+84 bytes from 192.168.0.4 icmp_seq=1 ttl=57 time=4.906 ms
+84 bytes from 192.168.0.4 icmp_seq=2 ttl=57 time=5.845 ms
+84 bytes from 192.168.0.4 icmp_seq=3 ttl=57 time=4.760 ms
+84 bytes from 192.168.0.4 icmp_seq=4 ttl=57 time=5.206 ms
+84 bytes from 192.168.0.4 icmp_seq=5 ttl=57 time=3.446 ms
+
+VPCS> ping 192.168.1.4
+
+84 bytes from 192.168.1.4 icmp_seq=1 ttl=57 time=4.981 ms
+84 bytes from 192.168.1.4 icmp_seq=2 ttl=57 time=3.006 ms
+84 bytes from 192.168.1.4 icmp_seq=3 ttl=57 time=3.039 ms
+84 bytes from 192.168.1.4 icmp_seq=4 ttl=57 time=3.713 ms
+84 bytes from 192.168.1.4 icmp_seq=5 ttl=57 time=3.406 ms
+
+VPCS> ping ac10:ffff:0:10b1:2050:79ff:fe66:6801
+
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=1 ttl=50 time=25.204 ms
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=2 ttl=50 time=4.431 ms
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=3 ttl=50 time=3.787 ms
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=4 ttl=50 time=4.379 ms
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=5 ttl=50 time=4.184 ms
+
+VPCS> ping ac10:ffff:0:10c1:2050:79ff:fe66:6807
+
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=1 ttl=50 time=13.361 ms
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=2 ttl=50 time=3.206 ms
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=3 ttl=50 time=2.538 ms
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=4 ttl=50 time=3.764 ms
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=5 ttl=50 time=2.619 ms
+```
+
 
 
 
