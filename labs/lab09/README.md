@@ -118,24 +118,24 @@ R26|Lo0|IPv6|ac10:ffff:0:50a5::26/128|ac10:ffff:0:50a5::/64|Сеть управ�
 
 ### Часть 2: Присвоим автономные системы.
 
-Москва - 10
+Москва - 1001
 
-С.-Петербург - 20
+С.-Петербург - 2042
 
-Триада - 50
+Триада - 520
 
-Ламас - 60
+Ламас - 301
 
-Киторн - 70
+Киторн - 101
 
 ### Часть 3: Настроим eBGP между офисом Москва и двумя провайдерами - Киторн и Ламас. Между Киторн и Ламас. Между Ламас и Триада. Между офисом С.-Петербург и провайдером Триада.
 
 R14
 ```
-router bgp 10
+router bgp 1001
  bgp router-id 14.14.14.14
- neighbor 1.1.0.1 remote-as 70
- neighbor AC10:FFFF:0:1::1 remote-as 70
+ neighbor 1.1.0.1 remote-as 101
+ neighbor AC10:FFFF:0:1::1 remote-as 101
  address-family ipv4
   network 172.16.0.0 mask 255.255.255.0
   network 192.168.0.0
@@ -151,10 +151,10 @@ router bgp 10
 ```
 R15
 ```
-router bgp 10
+router bgp 1001
  bgp router-id 15.15.15.15
- neighbor 1.1.0.5 remote-as 60
- neighbor AC10:FFFF:0:2::1 remote-as 60
+ neighbor 1.1.0.5 remote-as 301
+ neighbor AC10:FFFF:0:2::1 remote-as 301
  address-family ipv4
   network 172.16.0.0 mask 255.255.255.0
   network 192.168.0.0
@@ -170,12 +170,12 @@ router bgp 10
 ```
 R18
 ```
-router bgp 20
+router bgp 2042
  bgp router-id 18.18.18.18
- neighbor 1.1.0.25 remote-as 50
- neighbor 1.1.0.33 remote-as 50
- neighbor AC10:FFFF:0:6::1 remote-as 50
- neighbor AC10:FFFF:0:7::1 remote-as 50
+ neighbor 1.1.0.25 remote-as 520
+ neighbor 1.1.0.33 remote-as 520
+ neighbor AC10:FFFF:0:6::1 remote-as 520
+ neighbor AC10:FFFF:0:7::1 remote-as 520
  address-family ipv4
   network 172.16.1.0 mask 255.255.255.0
   network 192.168.2.0 mask 255.255.254.0
@@ -196,14 +196,14 @@ ipv6 route ::/0 AC10:FFFF:0:7::1 110
 ```
 R21
 ```
-router bgp 60
+router bgp 301
  bgp router-id 21.21.21.21
- neighbor 1.1.0.6 remote-as 10
- neighbor 1.1.0.9 remote-as 70
- neighbor 1.1.0.18 remote-as 50
- neighbor AC10:FFFF:0:2::2 remote-as 10
- neighbor AC10:FFFF:0:3::1 remote-as 70
- neighbor AC10:FFFF:0:5::2 remote-as 50
+ neighbor 1.1.0.6 remote-as 1001
+ neighbor 1.1.0.9 remote-as 101
+ neighbor 1.1.0.18 remote-as 520
+ neighbor AC10:FFFF:0:2::2 remote-as 1001
+ neighbor AC10:FFFF:0:3::1 remote-as 101
+ neighbor AC10:FFFF:0:5::2 remote-as 520
  address-family ipv4
   neighbor 1.1.0.6 activate
   neighbor 1.1.0.9 activate
@@ -217,12 +217,12 @@ router bgp 60
 ```
 R22
 ```
-router bgp 70
+router bgp 101
  bgp router-id 22.22.22.22
- neighbor 1.1.0.2 remote-as 10
- neighbor 1.1.0.10 remote-as 60
- neighbor AC10:FFFF:0:1::2 remote-as 10
- neighbor AC10:FFFF:0:3::2 remote-as 60
+ neighbor 1.1.0.2 remote-as 1001
+ neighbor 1.1.0.10 remote-as 301
+ neighbor AC10:FFFF:0:1::2 remote-as 1001
+ neighbor AC10:FFFF:0:3::2 remote-as 301
  address-family ipv4
   neighbor 1.1.0.2 activate
   neighbor 1.1.0.10 activate
@@ -234,15 +234,15 @@ router bgp 70
 ```
 R24
 ```
-router bgp 50
+router bgp 520
  bgp router-id 24.24.24.24
- neighbor 1.1.0.17 remote-as 60
- neighbor 1.1.0.26 remote-as 20
- neighbor 172.16.4.26 remote-as 50
+ neighbor 1.1.0.17 remote-as 301
+ neighbor 1.1.0.26 remote-as 2042
+ neighbor 172.16.4.26 remote-as 520
  neighbor 172.16.4.26 update-source Loopback0
- neighbor AC10:FFFF:0:5::1 remote-as 60
- neighbor AC10:FFFF:0:6::2 remote-as 20
- neighbor AC10:FFFF:0:5035::2 remote-as 50
+ neighbor AC10:FFFF:0:5::1 remote-as 301
+ neighbor AC10:FFFF:0:6::2 remote-as 2042
+ neighbor AC10:FFFF:0:5035::2 remote-as 520
  address-family ipv4
   neighbor 1.1.0.17 activate
   neighbor 1.1.0.26 activate
@@ -257,13 +257,13 @@ router bgp 50
  ```
  R26
  ```
- router bgp 50
+ router bgp 520
  bgp router-id 26.26.26.26
- neighbor 1.1.0.34 remote-as 20
- neighbor 172.16.4.24 remote-as 50
+ neighbor 1.1.0.34 remote-as 2042
+ neighbor 172.16.4.24 remote-as 520
  neighbor 172.16.4.24 update-source Loopback0
- neighbor AC10:FFFF:0:7::2 remote-as 20
- neighbor AC10:FFFF:0:5035::1 remote-as 50
+ neighbor AC10:FFFF:0:7::2 remote-as 2042
+ neighbor AC10:FFFF:0:5035::1 remote-as 520
  address-family ipv4
   neighbor 1.1.0.34 activate
   neighbor 172.16.4.24 activate
