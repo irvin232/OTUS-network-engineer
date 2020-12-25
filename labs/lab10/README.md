@@ -112,10 +112,12 @@ router bgp 1001
  neighbor AC10:FFFF:0:10A1::15 remote-as 1001
  neighbor AC10:FFFF:0:10A1::15 update-source Loopback0
   address-family ipv4
-   no neighbor AC10:FFFF:0:10A1::15 activate
+   neighbor 172.16.0.15 activate
+   neighbor 172.16.0.15 next-hop-self
  exit
  address-family ipv6
   neighbor AC10:FFFF:0:10A1::15 activate
+  neighbor AC10:FFFF:0:10A1::15 next-hop-self
  exit
 ```
 R15
@@ -128,9 +130,11 @@ router bgp 1001
  neighbor AC10:FFFF:0:10A1::14 update-source Loopback0
   address-family ipv4
    neighbor 172.16.0.14 activate
+   neighbor 172.16.0.14 next-hop-self
  exit
  address-family ipv6
   neighbor AC10:FFFF:0:10A1::14 activate
+  neighbor AC10:FFFF:0:10A1::14 next-hop-self
  exit
 ```
 #### Проверим соседство.
@@ -212,114 +216,233 @@ AC10:FFFF:0:10A1::14
 ```
 ### Часть 3: Настроим iBGP в провайдере Триада. Проверим соседство.
 
-R24
+R23
 ```
 router bgp 520
- neighbor 172.16.4.26 remote-as 520
- neighbor 172.16.4.26 update-source Loopback0
- neighbor AC10:FFFF:0:50A5::26 remote-as 520
- neighbor AC10:FFFF:0:50A5::26 update-source Loopback0
-  address-family ipv4
-  neighbor 172.16.4.26 activate
- exit
- address-family ipv6
-  neighbor AC10:FFFF:0:50A5::26 activate
- exit
- ```
- R26
-```
-router bgp 520
+ bgp router-id 23.23.23.23
  neighbor 172.16.4.24 remote-as 520
  neighbor 172.16.4.24 update-source Loopback0
+ neighbor 172.16.4.25 remote-as 520
+ neighbor 172.16.4.25 update-source Loopback0
+ neighbor 172.16.4.26 remote-as 520
+ neighbor 172.16.4.26 update-source Loopback0
  neighbor AC10:FFFF:0:50A5::24 remote-as 520
  neighbor AC10:FFFF:0:50A5::24 update-source Loopback0
+ neighbor AC10:FFFF:0:50A5::25 remote-as 520
+ neighbor AC10:FFFF:0:50A5::25 update-source Loopback0
+ neighbor AC10:FFFF:0:50A5::26 remote-as 520
+ neighbor AC10:FFFF:0:50A5::26 update-source Loopback0
  address-family ipv4
-   no neighbor AC10:FFFF:0:50A5::24 activate
+  network 172.16.4.0 mask 255.255.255.0
+  neighbor 172.16.4.24 activate
+  neighbor 172.16.4.24 next-hop-self
+  neighbor 172.16.4.25 activate
+  neighbor 172.16.4.25 next-hop-self
+  neighbor 172.16.4.26 activate
+  neighbor 172.16.4.26 next-hop-self
  exit
  address-family ipv6
+  network AC10:FFFF:0:50A5::/64
   neighbor AC10:FFFF:0:50A5::24 activate
+  neighbor AC10:FFFF:0:50A5::24 next-hop-self
+  neighbor AC10:FFFF:0:50A5::25 activate
+  neighbor AC10:FFFF:0:50A5::25 next-hop-self
+  neighbor AC10:FFFF:0:50A5::26 activate
+  neighbor AC10:FFFF:0:50A5::26 next-hop-self
  exit
+exit
 ```
-#### Проверим соседство.
+R24
+```
+route-map LP-200 permit 10
+ set local-preference 200
+exit
+router bgp 520
+ bgp router-id 24.24.24.24
+ neighbor 172.16.4.23 remote-as 520
+ neighbor 172.16.4.23 update-source Loopback0
+ neighbor 172.16.4.25 remote-as 520
+ neighbor 172.16.4.25 update-source Loopback0
+ neighbor 172.16.4.26 remote-as 520
+ neighbor 172.16.4.26 update-source Loopback0
+ neighbor AC10:FFFF:0:50A5::23 remote-as 520
+ neighbor AC10:FFFF:0:50A5::23 update-source Loopback0
+ neighbor AC10:FFFF:0:50A5::25 remote-as 520
+ neighbor AC10:FFFF:0:50A5::25 update-source Loopback0
+ neighbor AC10:FFFF:0:50A5::26 remote-as 520
+ neighbor AC10:FFFF:0:50A5::26 update-source Loopback0
+ address-family ipv4
+  network 172.16.4.0 mask 255.255.255.0
+  network 192.168.0.0 route-map LP-200
+  network 192.168.1.0 route-map LP-200
+  neighbor 172.16.4.23 activate
+  neighbor 172.16.4.23 next-hop-self
+  neighbor 172.16.4.25 activate
+  neighbor 172.16.4.25 next-hop-self
+  neighbor 172.16.4.26 activate
+  neighbor 172.16.4.26 next-hop-self
+ exit
+ address-family ipv6
+  network AC10:FFFF:0:50A5::/64
+  neighbor AC10:FFFF:0:50A5::23 activate
+  neighbor AC10:FFFF:0:50A5::23 next-hop-self
+  neighbor AC10:FFFF:0:50A5::25 activate
+  neighbor AC10:FFFF:0:50A5::25 next-hop-self
+  neighbor AC10:FFFF:0:50A5::26 activate
+  neighbor AC10:FFFF:0:50A5::26 next-hop-self
+ exit
+exit
+ ```
+ R25
+ ```
+route-map LP-200 permit 10
+ set local-preference 200
+exit
+ip route 172.16.2.0 255.255.255.0 1.1.0.50
+ip route 172.16.3.0 255.255.255.0 1.1.0.42
+ip route 192.168.4.0 255.255.255.0 1.1.0.50
+ip route 192.168.5.0 255.255.255.0 1.1.0.50
+ipv6 route AC10:FFFF:0:30A3::/64 AC10:FFFF:0:9::2
+ipv6 route AC10:FFFF:0:30B3::/64 AC10:FFFF:0:9::2
+ipv6 route AC10:FFFF:0:30C3::/64 AC10:FFFF:0:9::2
+ipv6 route AC10:FFFF:0:40A4::/64 AC10:FFFF:0:8::2
+router bgp 520
+ bgp router-id 25.25.25.25
+ neighbor 172.16.4.23 remote-as 520
+ neighbor 172.16.4.23 update-source Loopback0
+ neighbor 172.16.4.24 remote-as 520
+ neighbor 172.16.4.24 update-source Loopback0
+ neighbor 172.16.4.26 remote-as 520
+ neighbor 172.16.4.26 update-source Loopback0
+ neighbor AC10:FFFF:0:50A5::23 remote-as 520
+ neighbor AC10:FFFF:0:50A5::23 update-source Loopback0
+ neighbor AC10:FFFF:0:50A5::24 remote-as 520
+ neighbor AC10:FFFF:0:50A5::24 update-source Loopback0
+ neighbor AC10:FFFF:0:50A5::26 remote-as 520
+ neighbor AC10:FFFF:0:50A5::26 update-source Loopback0
+ address-family ipv4
+  network 172.16.2.0 mask 255.255.255.0
+  network 172.16.3.0 mask 255.255.255.0
+  network 172.16.4.0 mask 255.255.255.0
+  network 192.168.4.0 route-map LP-200
+  network 192.168.5.0
+  neighbor 172.16.4.23 activate
+  neighbor 172.16.4.23 next-hop-self
+  neighbor 172.16.4.24 activate
+  neighbor 172.16.4.24 next-hop-self
+  neighbor 172.16.4.26 activate
+  neighbor 172.16.4.26 next-hop-self
+ exit
+ address-family ipv6
+  network AC10:FFFF:0:30A3::/64
+  network AC10:FFFF:0:30B3::/64
+  network AC10:FFFF:0:30C3::/64
+  network AC10:FFFF:0:40A4::/64
+  network AC10:FFFF:0:50A5::/64
+  neighbor AC10:FFFF:0:50A5::23 activate
+  neighbor AC10:FFFF:0:50A5::23 next-hop-self
+  neighbor AC10:FFFF:0:50A5::24 activate
+  neighbor AC10:FFFF:0:50A5::24 next-hop-self
+  neighbor AC10:FFFF:0:50A5::26 activate
+  neighbor AC10:FFFF:0:50A5::26 next-hop-self
+ exit
+exit
+```
+  R26
+```
+route-map LP-200 permit 10
+ set local-preference 200
+ip route 172.16.2.0 255.255.255.0 1.1.0.58
+ip route 192.168.4.0 255.255.255.0 1.1.0.58
+ip route 192.168.5.0 255.255.255.0 1.1.0.58
+ipv6 route AC10:FFFF:0:30A3::/64 AC10:FFFF:0:10::2
+ipv6 route AC10:FFFF:0:30B3::/64 AC10:FFFF:0:10::2
+ipv6 route AC10:FFFF:0:30C3::/64 AC10:FFFF:0:10::2
+router bgp 520
+ bgp router-id 26.26.26.26
+ neighbor 172.16.4.23 remote-as 520
+ neighbor 172.16.4.23 update-source Loopback0
+ neighbor 172.16.4.24 remote-as 520
+ neighbor 172.16.4.24 update-source Loopback0
+ neighbor 172.16.4.25 remote-as 520
+ neighbor 172.16.4.25 update-source Loopback0
+ neighbor AC10:FFFF:0:50A5::23 remote-as 520
+ neighbor AC10:FFFF:0:50A5::23 update-source Loopback0
+ neighbor AC10:FFFF:0:50A5::24 remote-as 520
+ neighbor AC10:FFFF:0:50A5::24 update-source Loopback0
+ neighbor AC10:FFFF:0:50A5::25 remote-as 520
+ neighbor AC10:FFFF:0:50A5::25 update-source Loopback0
+ address-family ipv4
+  network 172.16.2.0 mask 255.255.255.0
+  network 172.16.4.0 mask 255.255.255.0
+  network 192.168.4.0
+  network 192.168.5.0 route-map LP-200
+  neighbor 172.16.4.23 activate
+  neighbor 172.16.4.23 next-hop-self
+  neighbor 172.16.4.24 activate
+  neighbor 172.16.4.24 next-hop-self
+  neighbor 172.16.4.25 activate
+  neighbor 172.16.4.25 next-hop-self
+ exit
+ address-family ipv6
+  network AC10:FFFF:0:30A3::/64
+  network AC10:FFFF:0:30B3::/64
+  network AC10:FFFF:0:30C3::/64
+  network AC10:FFFF:0:50A5::/64
+  neighbor AC10:FFFF:0:50A5::23 activate
+  neighbor AC10:FFFF:0:50A5::23 next-hop-self
+  neighbor AC10:FFFF:0:50A5::24 activate
+  neighbor AC10:FFFF:0:50A5::24 next-hop-self
+  neighbor AC10:FFFF:0:50A5::25 activate
+  neighbor AC10:FFFF:0:50A5::25 next-hop-self
+ exit
+exit
+```
+#### Проверим соседство на примере R26.
 
-R24 ipv4
-```
-R24#sh ip bgp summary
-BGP router identifier 24.24.24.24, local AS number 520
-BGP table version is 18, main routing table version 18
-5 network entries using 740 bytes of memory
-7 path entries using 448 bytes of memory
-5/3 BGP path/bestpath attribute entries using 680 bytes of memory
-2 BGP AS-PATH entries using 48 bytes of memory
-0 BGP route-map cache entries using 0 bytes of memory
-0 BGP filter-list cache entries using 0 bytes of memory
-BGP using 1916 total bytes of memory
-BGP activity 16/6 prefixes, 24/10 paths, scan interval 60 secs
-
-Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
-1.1.0.17        4          301     146     147       18    0    0 02:08:03        3
-1.1.0.26        4         2042     148     149       18    0    0 02:08:34        2
-172.16.4.26     4          520      92      91       18    0    0 01:16:47        2
-```
-R24 ipv6
-```
-R24#sh bgp ipv6 unicast summary
-BGP router identifier 24.24.24.24, local AS number 520
-BGP table version is 18, main routing table version 18
-5 network entries using 860 bytes of memory
-7 path entries using 616 bytes of memory
-3/2 BGP path/bestpath attribute entries using 408 bytes of memory
-2 BGP AS-PATH entries using 48 bytes of memory
-0 BGP route-map cache entries using 0 bytes of memory
-0 BGP filter-list cache entries using 0 bytes of memory
-BGP using 1932 total bytes of memory
-BGP activity 16/6 prefixes, 24/10 paths, scan interval 60 secs
-
-Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
-AC10:FFFF:0:5::1
-                4          301     148     147       18    0    0 02:08:35        3
-AC10:FFFF:0:6::2
-                4         2042     148     147       18    0    0 02:08:59        2
-AC10:FFFF:0:50A5::26
-                4          520      73      74       18    0    0 01:01:43        2
-```
 R26 ipv4
 ```
 R26#sh ip bgp summary
 BGP router identifier 26.26.26.26, local AS number 520
-BGP table version is 34, main routing table version 34
-5 network entries using 720 bytes of memory
-7 path entries using 560 bytes of memory
-5/3 BGP path/bestpath attribute entries using 760 bytes of memory
+BGP table version is 95, main routing table version 95
+9 network entries using 1296 bytes of memory
+12 path entries using 960 bytes of memory
+6/6 BGP path/bestpath attribute entries using 912 bytes of memory
 2 BGP AS-PATH entries using 48 bytes of memory
 0 BGP route-map cache entries using 0 bytes of memory
 0 BGP filter-list cache entries using 0 bytes of memory
-BGP using 2088 total bytes of memory
-BGP activity 19/9 prefixes, 30/16 paths, scan interval 60 secs
+BGP using 3216 total bytes of memory
+BGP activity 25/7 prefixes, 66/42 paths, scan interval 60 secs
 
 Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
-1.1.0.34        4         2042     149     151       34    0    0 02:09:37        2
-172.16.4.24     4          520      92      94       34    0    0 01:17:52        5
+1.1.0.34        4         2042     431     427       95    0    0 05:44:19        2
+172.16.4.23     4          520      23      35       95    0    0 00:18:50        0
+172.16.4.24     4          520     418     448       95    0    0 05:44:10        3
+172.16.4.25     4          520      20      30       95    0    0 00:13:43        4
 ```
 R26 ipv6
 ```
 R26#sh bgp ipv6 unicast summary
 BGP router identifier 26.26.26.26, local AS number 520
-BGP table version is 13, main routing table version 13
-5 network entries using 840 bytes of memory
-7 path entries using 728 bytes of memory
-3/1 BGP path/bestpath attribute entries using 456 bytes of memory
+BGP table version is 74, main routing table version 74
+9 network entries using 1512 bytes of memory
+14 path entries using 1456 bytes of memory
+5/4 BGP path/bestpath attribute entries using 760 bytes of memory
 2 BGP AS-PATH entries using 48 bytes of memory
 0 BGP route-map cache entries using 0 bytes of memory
 0 BGP filter-list cache entries using 0 bytes of memory
-BGP using 2072 total bytes of memory
-BGP activity 19/9 prefixes, 30/16 paths, scan interval 60 secs
+BGP using 3776 total bytes of memory
+BGP activity 25/7 prefixes, 70/42 paths, scan interval 60 secs
 
 Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
 AC10:FFFF:0:7::2
-                4         2042     149     145       13    0    0 02:10:04        2
+                4         2042     438     421       74    0    0 05:45:58        2
+AC10:FFFF:0:50A5::23
+                4          520      25      39       74    0    0 00:20:28        0
 AC10:FFFF:0:50A5::24
-                4          520      75      74       13    0    0 01:02:46        5
+                4          520     439     458       74    0    0 05:45:50        5
+AC10:FFFF:0:50A5::25
+                4          520      23      34       74    0    0 00:15:21        4
 ```
 ### Часть 4: Настроим офис С.-Петербург так, чтобы трафик до любого офиса распределялся по двум линкам одновременно. 
 R18
@@ -332,5 +455,34 @@ router bgp 2042
   maximum-paths 2
  exit
  ```
+ Введем show `ip bgp` для проверки multipath.
+ ```
+ R18#sh ip bgp
+BGP table version is 108, local router ID is 18.18.18.18
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
 
+     Network          Next Hop            Metric LocPrf Weight Path
+ *m  172.16.0.0/24    1.1.0.25                               0 520 301 1001 i
+ *>                   1.1.0.33                               0 520 301 1001 i
+ *>  172.16.1.0/24    1.1.2.2            1024640         32768 i
+ *m  172.16.2.0/24    1.1.0.25                               0 520 i
+ *>                   1.1.0.33                 0             0 520 i
+ *m  172.16.3.0/24    1.1.0.25                               0 520 i
+ *>                   1.1.0.33                               0 520 i
+ *m  192.168.0.0      1.1.0.25                               0 520 301 1001 i
+ *>                   1.1.0.33                               0 520 301 1001 i
+ *m  192.168.1.0      1.1.0.25                               0 520 301 1001 i
+ *>                   1.1.0.33                               0 520 301 1001 i
+ *>  192.168.2.0/23   1.1.2.2            1541120         32768 i
+ *m  192.168.4.0      1.1.0.25                               0 520 i
+ *>                   1.1.0.33                 0             0 520 i
+     Network          Next Hop            Metric LocPrf Weight Path
+ *m  192.168.5.0      1.1.0.25                               0 520 i
+ *>                   1.1.0.33                 0             0 520 i
+```
+### Часть 5: Проверим IP связность.
 
