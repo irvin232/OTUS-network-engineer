@@ -127,7 +127,7 @@ ipv6 router ospf 1
 default-information originate metric 5
 exit
 ```
-R15 - Настроим iBGP
+R15 - Настроим iBGP.
 ```
 router bgp 1001
  bgp default local-preference 200
