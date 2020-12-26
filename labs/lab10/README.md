@@ -104,7 +104,7 @@ R26|Lo0|IPv6|ac10:ffff:0:50a5::26/128|ac10:ffff:0:50a5::/64|Сеть управ�
 
 ### Часть 2: Настроим iBGP в офисе Москва между маршрутизаторами R14 и R15 и сделаем так, чтобы приоритетным провайдером стал Ламас. Проверим соседство.
 
-R14
+R14 - Настроим iBGP и увеличим метрику шлюза по умолчанию в ospf, что бы приоритетным стал R15.
 ```
 router bgp 1001
  neighbor 172.16.0.15 remote-as 1001
@@ -119,8 +119,15 @@ router bgp 1001
   neighbor AC10:FFFF:0:10A1::15 activate
   neighbor AC10:FFFF:0:10A1::15 next-hop-self
  exit
+exit
+router ospf 1
+default-information originate metric 5
+exit
+ipv6 router ospf 1
+default-information originate metric 5
+exit
 ```
-R15
+R15 - Настроим iBGP
 ```
 router bgp 1001
  bgp default local-preference 200
@@ -138,6 +145,7 @@ router bgp 1001
  exit
 ```
 #### Проверим соседство.
+
 R14 ipv4
 ```
 R14#sh ip bgp summary
@@ -216,7 +224,7 @@ AC10:FFFF:0:10A1::14
 ```
 ### Часть 3: Настроим iBGP в провайдере Триада. Проверим соседство.
 
-R23
+R23 - Настроим iBGP.
 ```
 router bgp 520
  bgp router-id 23.23.23.23
@@ -252,11 +260,8 @@ router bgp 520
  exit
 exit
 ```
-R24
+R24 - Настроим iBGP.
 ```
-route-map LP-200 permit 10
- set local-preference 200
-exit
 router bgp 520
  bgp router-id 24.24.24.24
  neighbor 172.16.4.23 remote-as 520
@@ -273,8 +278,6 @@ router bgp 520
  neighbor AC10:FFFF:0:50A5::26 update-source Loopback0
  address-family ipv4
   network 172.16.4.0 mask 255.255.255.0
-  network 192.168.0.0 route-map LP-200
-  network 192.168.1.0 route-map LP-200
   neighbor 172.16.4.23 activate
   neighbor 172.16.4.23 next-hop-self
   neighbor 172.16.4.25 activate
@@ -293,7 +296,7 @@ router bgp 520
  exit
 exit
  ```
- R25
+R25 - Настроим iBGP. Анонсируем все маршруты, приходящие от Чокурдах и увеличим параметр `local-preference` до 200 для сети 192.168.4.0/24, т.к. со стороны Чокурдах приоритет направления трафика стоит на R25.
  ```
 route-map LP-200 permit 10
  set local-preference 200
@@ -348,7 +351,7 @@ router bgp 520
  exit
 exit
 ```
-  R26
+R26 - Настроим iBGP. Анонсируем все маршруты, приходящие от Чокурдах и увеличим параметр `local-preference` до 200 для сети 192.168.5.0/24, т.к. со стороны Чокурдах приоритет направления трафика стоит на R26.
 ```
 route-map LP-200 permit 10
  set local-preference 200
@@ -444,8 +447,9 @@ AC10:FFFF:0:50A5::24
 AC10:FFFF:0:50A5::25
                 4          520      23      34       74    0    0 00:15:21        4
 ```
-### Часть 4: Настроим офис С.-Петербург так, чтобы трафик до любого офиса распределялся по двум линкам одновременно. 
-R18
+### Часть 4: Настроим офис С.-Петербург так, чтобы трафик до любого офиса распределялся по двум линкам одновременно.
+
+R18 - Добавим балансировку.
 ```
 router bgp 2042
  address-family ipv4
@@ -486,7 +490,7 @@ RPKI validation codes: V valid, I invalid, N Not found
 ```
 ### Часть 5: Проверим IP связность.
 
-#### Посмотрим выделенные IP адеса на машинах VPC в офисах.
+#### Посмотрим текущие IP адеса на машинах VPC в офисах.
 
 VPC1
 ```
@@ -518,9 +522,115 @@ VPC31
 PC1 : 192.168.5.2 255.255.255.0 gateway 192.168.5.1
 PC1 : ac10:ffff:0:30c3:2050:79ff:fe66:681f/64
 ```
-#### Проверим выборочно связанность всех VPC.
-```
+#### Проверим выборочно связанность между всеми VPC.
+
 VPC1
+```
+VPCS> ping 192.168.3.2
 
+192.168.3.2 icmp_seq=1 timeout
+192.168.3.2 icmp_seq=2 timeout
+192.168.3.2 icmp_seq=3 timeout
+192.168.3.2 icmp_seq=4 timeout
+192.168.3.2 icmp_seq=5 timeout
 
+VPCS> ping 192.168.3.2
 
+84 bytes from 192.168.3.2 icmp_seq=1 ttl=56 time=5.526 ms
+84 bytes from 192.168.3.2 icmp_seq=2 ttl=56 time=3.797 ms
+84 bytes from 192.168.3.2 icmp_seq=3 ttl=56 time=3.557 ms
+84 bytes from 192.168.3.2 icmp_seq=4 ttl=56 time=4.499 ms
+84 bytes from 192.168.3.2 icmp_seq=5 ttl=56 time=3.686 ms
+
+VPCS> ping 192.168.5.2
+
+84 bytes from 192.168.5.2 icmp_seq=1 ttl=58 time=3.704 ms
+84 bytes from 192.168.5.2 icmp_seq=2 ttl=58 time=3.372 ms
+84 bytes from 192.168.5.2 icmp_seq=3 ttl=58 time=5.796 ms
+84 bytes from 192.168.5.2 icmp_seq=4 ttl=58 time=11.366 ms
+84 bytes from 192.168.5.2 icmp_seq=5 ttl=58 time=7.204 ms
+
+VPCS> ping ac10:ffff:0:2b42:2050:79ff:fe66:6808
+
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=1 ttl=48 time=5.191 ms
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=2 ttl=48 time=6.379 ms
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=3 ttl=48 time=6.197 ms
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=4 ttl=48 time=3.518 ms
+ac10:ffff:0:2b42:2050:79ff:fe66:6808 icmp6_seq=5 ttl=48 time=7.359 ms
+
+VPCS> ping ac10:ffff:0:30b3:2050:79ff:fe66:681e
+
+ac10:ffff:0:30b3:2050:79ff:fe66:681e icmp6_seq=1 ttl=52 time=3.857 ms
+ac10:ffff:0:30b3:2050:79ff:fe66:681e icmp6_seq=2 ttl=52 time=6.111 ms
+ac10:ffff:0:30b3:2050:79ff:fe66:681e icmp6_seq=3 ttl=52 time=4.709 ms
+ac10:ffff:0:30b3:2050:79ff:fe66:681e icmp6_seq=4 ttl=52 time=4.913 ms
+ac10:ffff:0:30b3:2050:79ff:fe66:681e icmp6_seq=5 ttl=52 time=3.703 ms
+```
+VPC8
+```
+VPCS> ping 192.168.1.4
+
+84 bytes from 192.168.1.4 icmp_seq=1 ttl=56 time=8.155 ms
+84 bytes from 192.168.1.4 icmp_seq=2 ttl=56 time=7.005 ms
+84 bytes from 192.168.1.4 icmp_seq=3 ttl=56 time=3.940 ms
+84 bytes from 192.168.1.4 icmp_seq=4 ttl=56 time=3.622 ms
+84 bytes from 192.168.1.4 icmp_seq=5 ttl=56 time=4.999 ms
+
+VPCS> ping 192.168.4.2
+
+84 bytes from 192.168.4.2 icmp_seq=1 ttl=58 time=19.118 ms
+84 bytes from 192.168.4.2 icmp_seq=2 ttl=58 time=4.442 ms
+84 bytes from 192.168.4.2 icmp_seq=3 ttl=58 time=2.677 ms
+84 bytes from 192.168.4.2 icmp_seq=4 ttl=58 time=2.943 ms
+84 bytes from 192.168.4.2 icmp_seq=5 ttl=58 time=2.596 ms
+
+VPCS> ping ac10:ffff:0:10b1:2050:79ff:fe66:6801
+
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=1 ttl=48 time=5.824 ms
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=2 ttl=48 time=6.048 ms
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=3 ttl=48 time=4.212 ms
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=4 ttl=48 time=3.577 ms
+ac10:ffff:0:10b1:2050:79ff:fe66:6801 icmp6_seq=5 ttl=48 time=4.681 ms
+
+VPCS> ping ac10:ffff:0:30c3:2050:79ff:fe66:681f
+
+ac10:ffff:0:30c3:2050:79ff:fe66:681f icmp6_seq=1 ttl=54 time=16.268 ms
+ac10:ffff:0:30c3:2050:79ff:fe66:681f icmp6_seq=2 ttl=54 time=2.512 ms
+ac10:ffff:0:30c3:2050:79ff:fe66:681f icmp6_seq=3 ttl=54 time=2.486 ms
+ac10:ffff:0:30c3:2050:79ff:fe66:681f icmp6_seq=4 ttl=54 time=2.634 ms
+ac10:ffff:0:30c3:2050:79ff:fe66:681f icmp6_seq=5 ttl=54 time=2.325 ms
+```
+VPC31
+```
+VPCS> ping 192.168.0.4
+
+84 bytes from 192.168.0.4 icmp_seq=1 ttl=58 time=7.201 ms
+84 bytes from 192.168.0.4 icmp_seq=2 ttl=58 time=3.074 ms
+84 bytes from 192.168.0.4 icmp_seq=3 ttl=58 time=5.810 ms
+84 bytes from 192.168.0.4 icmp_seq=4 ttl=58 time=4.353 ms
+84 bytes from 192.168.0.4 icmp_seq=5 ttl=58 time=3.580 ms
+
+VPCS> ping 192.168.2.2
+
+84 bytes from 192.168.2.2 icmp_seq=1 ttl=59 time=3.863 ms
+84 bytes from 192.168.2.2 icmp_seq=2 ttl=59 time=3.550 ms
+84 bytes from 192.168.2.2 icmp_seq=3 ttl=59 time=2.545 ms
+84 bytes from 192.168.2.2 icmp_seq=4 ttl=59 time=2.486 ms
+84 bytes from 192.168.2.2 icmp_seq=5 ttl=59 time=3.053 ms
+
+VPCS> ping ac10:ffff:0:10c1:2050:79ff:fe66:6807
+
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=1 ttl=52 time=34.004 ms
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=2 ttl=52 time=3.285 ms
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=3 ttl=52 time=3.336 ms
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=4 ttl=52 time=3.510 ms
+ac10:ffff:0:10c1:2050:79ff:fe66:6807 icmp6_seq=5 ttl=52 time=4.067 ms
+
+VPCS> ping ac10:ffff:0:2c42:2050:79ff:fe66:680b
+
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=1 ttl=54 time=14.471 ms
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=2 ttl=54 time=3.257 ms
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=3 ttl=54 time=2.484 ms
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=4 ttl=54 time=3.433 ms
+ac10:ffff:0:2c42:2050:79ff:fe66:680b icmp6_seq=5 ttl=54 time=2.284 ms
+```
