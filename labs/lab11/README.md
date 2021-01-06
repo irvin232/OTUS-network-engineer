@@ -176,3 +176,57 @@ no default-information originate metric 5
 default-information originate
 exit
 ```
+### Часть 5: Настроим провайдера Ламас так, чтобы в офис Москва отдавался только маршрут по-умолчанию и префикс офиса С.-Петербург.
+
+R21 -  - Добавим `default-originate` и `route-map` в сторону R15. 
+```
+ip prefix-list LIST_OUT_SP seq 5 permit 172.16.1.0/24
+ip prefix-list LIST_OUT_SP seq 10 permit 192.168.2.0/23
+ip prefix-list LIST_OUT_SP seq 15 deny 0.0.0.0/0 le 32
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 5 permit AC10:FFFF:0:2A42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 10 permit AC10:FFFF:0:2B42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 15 permit AC10:FFFF:0:2C42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 20 deny ::/0 le 128
+route-map DOWNLINK-Moscow_ipv6 permit 10
+ match ipv6 address prefix-list LIST_OUT_SP_ipv6
+exit
+route-map DOWNLINK-Moscow permit 10
+ match ip address prefix-list LIST_OUT_SP
+exit
+router bgp 301
+ address-family ipv4
+  neighbor 1.1.0.6 default-originate
+  neighbor 1.1.0.6 route-map DOWNLINK-Moscow out
+ exit
+  neighbor AC10:FFFF:0:2::2 default-originate
+  neighbor AC10:FFFF:0:2::2 route-map DOWNLINK-Moscow_ipv6 out
+ exit
+exit
+``` 
+R15 - Уберем статические маршруты, что бы они приходили от провайдера Ламас и добавим увеличение метрики в ospf для сетей Чокурдах, что бы ospf направлял этот трафик на R14.
+```
+no ip route 0.0.0.0 0.0.0.0 1.1.0.5
+no ip route 0.0.0.0 0.0.0.0 1.1.0.5
+ip prefix-list Chokurdah seq 5 permit 192.168.4.0/23
+ip prefix-list Chokurdah seq 10 permit 172.16.2.0/24
+ipv6 prefix-list Chokurdah-ipv6 seq 5 permit AC10:FFFF:0:30A3::/64
+ipv6 prefix-list Chokurdah-ipv6 seq 10 permit AC10:FFFF:0:30B3::/64
+ipv6 prefix-list Chokurdah-ipv6 seq 15 permit AC10:FFFF:0:30C3::/64
+route-map RM-Chokurdah-out permit 10
+ match ip address prefix-list Chokurdah
+ match ipv6 address prefix-list Chokurdah-ipv6
+exit
+router ospf 1
+ default-information originate metric 5 route-map RM-Chokurdah-out
+exit
+ipv6 router ospf 1
+ default-information originate metric 5 route-map RM-Chokurdah-out
+exit
+```
+### Часть 6: Проверим IP связность.
+
+#### Посмотрим текущие IP адеса на машинах VPC в офисах.
+
+VPC1
+```
+
