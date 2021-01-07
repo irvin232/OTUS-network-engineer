@@ -152,28 +152,41 @@ exit
 ```
 ### Часть 4: Настроим провайдер Киторн так, чтобы в офис Москва отдавался только маршрут по-умолчанию.
 
-R22 - Добавим `default-originate` в сторону R14.
+R22 - Добавим `default-originate` и `route-map` в сторону R14.
 ```
 router bgp 101
  address-family ipv4
   neighbor 1.1.0.2 default-originate
+  neighbor 1.1.0.2 route-map Moscow-deny-all out
  exit
  address-family ipv6
   neighbor AC10:FFFF:0:1::2 default-originate
+  neighbor AC10:FFFF:0:1::2 route-map Moscow-deny-all out
  exit
 exit
 ```
-R14 - Уберем статические маршруты, что бы они приходили от провайдера Китрон и уберем увеличение метрики в ospf, что бы ospf не направлял весь трафик на R15.
+R14 - Уберем статические маршруты, что бы они приходили от провайдера Китрон, уберем увеличение метрики по всем маршрутам в ospf и добавим увеличение метрики только на сети Москвы, что бы ospf направлял трафик Москвы сразу на R15.
 ```
 no ip route 0.0.0.0 0.0.0.0 1.1.0.1
 no ipv6 route ::/0 AC10:FFFF:0:1::1 110
+ip prefix-list LIST_OUT_SP seq 5 permit 172.16.1.0/24
+ip prefix-list LIST_OUT_SP seq 10 permit 192.168.2.0/23
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 5 permit AC10:FFFF:0:2A42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 10 permit AC10:FFFF:0:2B42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 15 permit AC10:FFFF:0:2C42::/64
+route-map DOWNLINK-Moscow_ipv6 permit 10
+ match ipv6 address prefix-list LIST_OUT_SP_ipv6
+exit
+route-map DOWNLINK-Moscow permit 10
+ match ip address prefix-list LIST_OUT_SP
+exit
 router ospf 1
 no default-information originate metric 5
-default-information originate
+default-information originate metric 5 route-map DOWNLINK-Moscow
 exit
 ipv6 router ospf 1
 no default-information originate metric 5
-default-information originate
+default-information originate metric 5 route-map DOWNLINK-Moscow_ipv6
 exit
 ```
 ### Часть 5: Настроим провайдера Ламас так, чтобы в офис Москва отдавался только маршрут по-умолчанию и префикс офиса С.-Петербург.
@@ -203,25 +216,10 @@ router bgp 301
  exit
 exit
 ``` 
-R15 - Уберем статические маршруты, что бы они приходили от провайдера Ламас и добавим увеличение метрики в ospf для сетей Чокурдах, что бы ospf направлял этот трафик на R14.
+R15 - Уберем статические маршруты, что бы они приходили от провайдера Ламас.
 ```
 no ip route 0.0.0.0 0.0.0.0 1.1.0.5
 no ip route 0.0.0.0 0.0.0.0 1.1.0.5
-ip prefix-list Chokurdah seq 5 permit 192.168.4.0/23
-ip prefix-list Chokurdah seq 10 permit 172.16.2.0/24
-ipv6 prefix-list Chokurdah-ipv6 seq 5 permit AC10:FFFF:0:30A3::/64
-ipv6 prefix-list Chokurdah-ipv6 seq 10 permit AC10:FFFF:0:30B3::/64
-ipv6 prefix-list Chokurdah-ipv6 seq 15 permit AC10:FFFF:0:30C3::/64
-route-map RM-Chokurdah-out permit 10
- match ip address prefix-list Chokurdah
- match ipv6 address prefix-list Chokurdah-ipv6
-exit
-router ospf 1
- default-information originate metric 5 route-map RM-Chokurdah-out
-exit
-ipv6 router ospf 1
- default-information originate metric 5 route-map RM-Chokurdah-out
-exit
 ```
 ### Часть 6: Проверим IP связность.
 
