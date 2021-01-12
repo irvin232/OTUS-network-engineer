@@ -154,6 +154,14 @@ exit
 
 R22 - Добавим `default-originate` и `route-map` в сторону R14.
 ```
+ip prefix-list LIST_OUT_deny-all seq 5 deny 0.0.0.0/0 le 32
+ipv6 prefix-list LIST_OUT_deny-all_ipv6 seq 5 deny ::/0 le 128
+route-map Moscow-deny-all-ipv6 permit 10
+ match ipv6 address prefix-list LIST_OUT_deny-all_ipv6
+exit
+route-map Moscow-deny-all permit 10
+ match ip address prefix-list LIST_OUT_deny-all
+exit
 router bgp 101
  address-family ipv4
   neighbor 1.1.0.2 default-originate
@@ -161,11 +169,11 @@ router bgp 101
  exit
  address-family ipv6
   neighbor AC10:FFFF:0:1::2 default-originate
-  neighbor AC10:FFFF:0:1::2 route-map Moscow-deny-all out
+  neighbor AC10:FFFF:0:1::2 route-map Moscow-deny-all-ipv6 out
  exit
 exit
 ```
-R14 - Уберем статические маршруты, что бы они приходили от провайдера Китрон, уберем увеличение метрики по всем маршрутам в ospf и добавим увеличение метрики только на сети Москвы, что бы ospf направлял трафик Москвы сразу на R15.
+R14 - Уберем статические маршруты, что бы они приходили от провайдера Китрон, уберем увеличение метрики по всем маршрутам в ospf и добавим увеличение метрики только на сети Москвы, что бы ospf направлял трафик Москвы сразу на R15. А так же добавим `route-map`, чтобы принимался только маршрут по-умолчанию.
 ```
 no ip route 0.0.0.0 0.0.0.0 1.1.0.1
 no ipv6 route ::/0 AC10:FFFF:0:1::1 110
@@ -187,6 +195,22 @@ exit
 ipv6 router ospf 1
 no default-information originate metric 5
 default-information originate metric 5 route-map DOWNLINK-Moscow_ipv6
+exit
+ip prefix-list LIST_OUT_deny-all seq 5 permit 0.0.0.0/0
+ipv6 prefix-list LIST_OUT_deny-all_ipv6 seq 5 permit ::/0
+route-map Moscow-deny-all-ipv6 permit 10
+ match ipv6 address prefix-list LIST_OUT_deny-all_ipv6
+exit
+route-map Moscow-deny-all permit 10
+ match ip address prefix-list LIST_OUT_deny-all
+exit
+router bgp 1001
+ address-family ipv4
+  neighbor 1.1.0.1 route-map Moscow-deny-all in
+ exit
+ address-family ipv6
+  neighbor AC10:FFFF:0:1::1 route-map Moscow-deny-all-ipv6 in
+ exit
 exit
 ```
 ### Часть 5: Настроим провайдера Ламас так, чтобы в офис Москва отдавался только маршрут по-умолчанию и префикс офиса С.-Петербург.
@@ -216,10 +240,31 @@ router bgp 301
  exit
 exit
 ``` 
-R15 - Уберем статические маршруты, что бы они приходили от провайдера Ламас.
+R15 - Уберем статические маршруты, что бы они приходили от провайдера Ламас. И добавим `route-map`, чтобы принимался только маршрут по-умолчанию и префикс офиса С.-Петербург.
 ```
 no ip route 0.0.0.0 0.0.0.0 1.1.0.5
 no ip route 0.0.0.0 0.0.0.0 1.1.0.5
+ip prefix-list LIST_OUT_SP seq 5 permit 172.16.1.0/24
+ip prefix-list LIST_OUT_SP seq 10 permit 192.168.2.0/23
+ip prefix-list LIST_OUT_SP seq 15 permit 0.0.0.0/0
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 5 permit AC10:FFFF:0:2A42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 10 permit AC10:FFFF:0:2B42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 15 permit AC10:FFFF:0:2C42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 20 permit ::/0
+route-map UPLINK-Moscow_ipv6 permit 10
+ match ipv6 address prefix-list LIST_OUT_SP_ipv6
+exit
+route-map UPLINK-Moscow permit 10
+ match ip address prefix-list LIST_OUT_SP
+exit
+router bgp 1001
+ address-family ipv4
+  neighbor 1.1.0.5 route-map UPLINK-Moscow in
+ exit
+ address-family ipv6
+  neighbor AC10:FFFF:0:1::2 route-map UPLINK-Moscow_ipv6 in
+ exit
+exit
 ```
 ### Часть 6: Проверим IP связность.
 
