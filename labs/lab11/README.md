@@ -215,7 +215,7 @@ exit
 ```
 ### Часть 5: Настроим провайдера Ламас так, чтобы в офис Москва отдавался только маршрут по-умолчанию и префикс офиса С.-Петербург.
 
-R21 -  - Добавим `default-originate` и `route-map` в сторону R15. 
+R21 - Добавим `default-originate` и `route-map` в сторону R15. 
 ```
 ip prefix-list LIST_OUT_SP seq 5 permit 172.16.1.0/24
 ip prefix-list LIST_OUT_SP seq 10 permit 192.168.2.0/23
