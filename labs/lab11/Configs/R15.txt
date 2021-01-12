@@ -1,9 +1,9 @@
 R15#sh run
 Building configuration...
 
-Current configuration : 2841 bytes
+Current configuration : 3483 bytes
 !
-! Last configuration change at 15:58:10 EET Thu Jan 7 2021
+! Last configuration change at 00:05:00 EET Wed Jan 13 2021
 version 15.2
 service timestamps debug datetime msec
 service timestamps log datetime msec
@@ -113,6 +113,7 @@ router bgp 1001
   network 192.168.0.0
   network 192.168.1.0
   neighbor 1.1.0.5 activate
+  neighbor 1.1.0.5 route-map UPLINK-Moscow in
   neighbor 1.1.0.5 filter-list 1 out
   neighbor 172.16.0.14 activate
   neighbor 172.16.0.14 next-hop-self
@@ -141,10 +142,25 @@ no ip http secure-server
 !
 ip prefix-list Deny-area101 seq 5 deny 1.1.1.0/30
 ip prefix-list Deny-area101 seq 10 permit 0.0.0.0/0 le 32
+!
+ip prefix-list LIST_OUT_SP seq 5 permit 172.16.1.0/24
+ip prefix-list LIST_OUT_SP seq 10 permit 192.168.2.0/23
+ip prefix-list LIST_OUT_SP seq 15 permit 0.0.0.0/0
 ipv6 router ospf 1
  router-id 15.15.15.15
  default-information originate
 !
+!
+!
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 5 permit AC10:FFFF:0:2A42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 10 permit AC10:FFFF:0:2B42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 15 permit AC10:FFFF:0:2C42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 20 permit ::/0
+route-map UPLINK-Moscow permit 10
+ match ip address prefix-list LIST_OUT_SP
+!
+route-map UPLINK-Moscow_ipv6 permit 10
+ match ipv6 address prefix-list LIST_OUT_SP_ipv6
 !
 !
 !
