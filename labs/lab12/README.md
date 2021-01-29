@@ -191,6 +191,7 @@ ip prefix-list NO_NAT_FROM_iBGP seq 10 deny 100.0.14.0/24
 ip prefix-list NO_NAT_FROM_iBGP seq 15 permit 0.0.0.0/0
 ```
 Проверим работу NAT. Пропингуем c VPC Москвы VPC в офисе Чокурдах и посмотрим вывод команды `sh ip nat translations` на R15
+
 VPC7
 ```
 VPCS> ping 192.168.5.2
@@ -215,7 +216,7 @@ icmp 100.0.15.1:25434  192.168.1.4:25434  192.168.5.2:25434  192.168.5.2:25434
 R15#
 ```
 
-2. Настроите NAT(PAT) на R18. Трансляция должна осуществляться в пул из 5 адресов автономной системы AS2042
+### Часть 3: Настроим NAT(PAT) на R18. Трансляция должна осуществляться в пул из 5 адресов автономной системы AS2042.
 
 Выделим внешнюю адресацию NAT для R18: 100.0.18.0/24 Определим какие интерфейсы для NAT внешние и внутренние. Добавим статический маршрут внешней NAT адресации на Null-интерфейс. Настроим NAT with overload в один адрес для пользовательских сетей. Объявим внешнюю NAT адресацию в BGP. Удалим объявление пользовательских сетей из BGP. Удалим из prefix-list LIST_OUT1 пользовательские сети и добавим внешнюю NAT адресацию.
 
@@ -246,29 +247,83 @@ router bgp 2042
 no ip prefix-list LIST_OUT1 seq 10 permit 192.168.2.0/23
 ip prefix-list LIST_OUT1 seq 10 permit 100.0.18.0/24
 ```
+Проверим работу NAT. Пропингуем c VPC С.-Петербурга VPC в офисе Чокурдах и посмотрим вывод команды `sh ip nat translations` на R18
 
-3. Настроите статический NAT для R20
+VPC
+```
+VPCS> ping 192.168.4.2
 
-Интерфейс e0/3 мы пометили как внутренний ранее, поэтому прописываем только статический NAT
+84 bytes from 192.168.4.2 icmp_seq=1 ttl=58 time=3.711 ms
+84 bytes from 192.168.4.2 icmp_seq=2 ttl=58 time=1.604 ms
+84 bytes from 192.168.4.2 icmp_seq=3 ttl=58 time=2.335 ms
+84 bytes from 192.168.4.2 icmp_seq=4 ttl=58 time=1.607 ms
+84 bytes from 192.168.4.2 icmp_seq=5 ttl=58 time=2.047 ms
+```
+R18
+```
+R18#sh ip nat translations
+Pro Inside global      Inside local       Outside local      Outside global
+icmp 100.0.18.1:43611  192.168.3.2:43611  192.168.4.2:43611  192.168.4.2:43611
+icmp 100.0.18.1:43867  192.168.3.2:43867  192.168.4.2:43867  192.168.4.2:43867
+icmp 100.0.18.1:44123  192.168.3.2:44123  192.168.4.2:44123  192.168.4.2:44123
+icmp 100.0.18.1:44379  192.168.3.2:44379  192.168.4.2:44379  192.168.4.2:44379
+icmp 100.0.18.1:44635  192.168.3.2:44635  192.168.4.2:44635  192.168.4.2:44635
+```
+
+### Часть 4: Настроим статический NAT для R20.
+
+Интерфейс e0/3 мы пометили как внутренний ранее, поэтому прописываем только статический NAT.
 
 R15
 ```
 ip nat inside source static 1.1.1.22 100.0.15.20
 ```
+Проверим работу NAT. Посмотрим вывод команды `sh ip nat translations` на R15
 
-4. Настроите NAT так, чтобы R19 был доступен с любого узла для удаленного управления
+R15
+```
+R15#sh ip nat translations
+Pro Inside global      Inside local       Outside local      Outside global
+--- 100.0.15.20        1.1.1.22           ---                ---
+tcp 100.0.15.19:2222   172.16.0.19:22     ---                ---
+```
+
+### Часть 5: Настроим NAT так, чтобы R19 был доступен с любого узла для удаленного управления
+
+Настроим `secondary` интерфейсы на R14 и R15. Прописываем на обоих статический NAT, что бы устройство было доступно через оба маршрутизатора, хотя и под разными IP.
 
 R14
 ```
 interface Ethernet0/2
 ip address 100.0.14.19 255.255.255.0 secondary
 exit
-ip nat inside source static tcp 172.16.0.19 23 100.0.14.19 2323
+ip nat inside source static tcp 172.16.0.19 22 100.0.14.19 2222
+```
+R15
+```
+interface Ethernet0/2
+ip address 100.0.15.19 255.255.255.0 secondary
+exit
+ip nat inside source static tcp 172.16.0.19 22 100.0.15.19 2222
+```
+Проверим работу NAT. Пустим команду telnet на 2222 порт с роутера С.-Петербурга. Посмотрим вывод команды `sh ip nat translations` на R14.
+SW10
+```
+SW10#telnet 100.0.14.19 2222 /source-interface vlan22
+Trying 100.0.14.19, 2222 ... Open
+SSH-2.0-Cisco-1.25
 
+[Connection to 100.0.14.19 closed by foreign host]
+```
+R14
+```
+R14#sh ip nat translations
+Pro Inside global      Inside local       Outside local      Outside global
+tcp 100.0.14.19:2222   172.16.0.19:22     100.0.18.1:64066   100.0.18.1:64066
+tcp 100.0.14.19:2222   172.16.0.19:22     ---                ---
+```
 
-
-
-6. Настроите DHCP сервер в офисе Москва на маршрутизаторах R12 и R13. VPC1 и VPC7 должны получать сетевые настройки по DHCP
+### Часть 6: Настроим DHCP сервер в офисе Москва на маршрутизаторах R12 и R13. VPC1 и VPC7 должны получать сетевые настройки по DHCP
 
 R12
 ```
@@ -292,8 +347,13 @@ exit
 ```
 ip dhcp
 ```
+Проверим получение IP на примере VPC7.
+```
+VPCS> dhcp
+DORA IP 192.168.1.5/24 GW 192.168.1.1
+```
 
-7. Настроите NTP сервер на R12 и R13. Все устройства в офисе Москва должны синхронизировать время с R12 и R13
+### Часть 7. Настроим NTP сервер на R12 и R13. Все устройства в офисе Москва должны синхронизировать время с R12 и R13
 
 R12 и R13
 ```
@@ -306,4 +366,15 @@ ntp master 3
 ntp server 172.16.0.12
 ntp server 172.16.0.13
 ```
-
+Проверим NTP командой `show ntp status` на примере R15.
+```
+R15#show ntp status
+Clock is synchronized, stratum 4, reference is 172.16.0.12
+nominal freq is 250.0000 Hz, actual freq is 250.0000 Hz, precision is 2**10
+ntp uptime is 772100 (1/100 of seconds), resolution is 4000
+reference time is E3BEDCF9.8AC08490 (21:14:01.542 EET Fri Jan 29 2021)
+clock offset is 0.5000 msec, root delay is 1.00 msec
+root dispersion is 9.41 msec, peer dispersion is 1.97 msec
+loopfilter state is 'CTRL' (Normal Controlled Loop), drift is 0.000000008 s/s
+system poll interval is 1024, last update was 253 sec ago.
+```
