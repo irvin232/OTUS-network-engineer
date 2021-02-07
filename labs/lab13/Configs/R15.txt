@@ -1,0 +1,239 @@
+R15#sh run
+Building configuration...
+
+Current configuration : 5045 bytes
+!
+! No configuration change since last restart
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R15
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+clock timezone EET 2 0
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+
+
+!
+!
+!
+!
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 172.16.0.15 255.255.255.255
+ ip ospf 1 area 0
+ ipv6 address AC10:FFFF:0:10A1::15/128
+ ipv6 ospf 1 area 0
+!
+interface Tunnel101
+ ip address 10.101.0.1 255.255.255.0
+ ip mtu 1400
+ ip tcp adjust-mss 1360
+ keepalive 3 3
+ tunnel source Loopback0
+ tunnel destination 172.16.1.18
+ tunnel key 101
+!
+interface Tunnel201
+ ip address 10.201.0.1 255.255.255.0
+ no ip redirects
+ ip mtu 1400
+ no ip next-hop-self eigrp 200
+ no ip split-horizon eigrp 200
+ ip nhrp map multicast dynamic
+ ip nhrp network-id 201
+ ip nhrp holdtime 600
+ ip nhrp redirect
+ ip summary-address eigrp 200 192.168.0.0 255.255.248.0
+ ip tcp adjust-mss 1360
+ tunnel source Loopback0
+ tunnel mode gre multipoint
+ tunnel key 201
+!
+interface Ethernet0/0
+ ip address 1.1.1.17 255.255.255.252
+ ip nat inside
+ ip virtual-reassembly in
+ ip ospf 1 area 0
+ ipv6 address FE80::15 link-local
+ ipv6 address AC10:FFFF:0:1051::1/64
+ ipv6 ospf 1 area 0
+!
+interface Ethernet0/1
+ ip address 1.1.1.13 255.255.255.252
+ ip nat inside
+ ip virtual-reassembly in
+ ip ospf 1 area 0
+ ipv6 address FE80::15 link-local
+ ipv6 address AC10:FFFF:0:1041::1/64
+ ipv6 ospf 1 area 0
+!
+interface Ethernet0/2
+ ip address 100.0.15.19 255.255.255.0 secondary
+ ip address 1.1.0.6 255.255.255.252
+ ip nat outside
+ ip virtual-reassembly in
+ ipv6 address FE80::15 link-local
+ ipv6 address AC10:FFFF:0:2::2/64
+!
+interface Ethernet0/3
+ ip address 1.1.1.21 255.255.255.252
+ ip nat inside
+ ip virtual-reassembly in
+ ip ospf 1 area 102
+ ipv6 address FE80::15 link-local
+ ipv6 address AC10:FFFF:0:1061::1/64
+ ipv6 ospf 1 area 102
+!
+!
+router eigrp 200
+ network 10.200.0.0 0.0.0.255
+ network 10.201.0.0 0.0.0.255
+ network 192.168.0.0 0.0.1.255
+!
+router ospf 1
+ router-id 15.15.15.15
+ area 102 filter-list prefix Deny-area101 in
+ redistribute static subnets
+ default-information originate
+!
+router bgp 1001
+ bgp router-id 15.15.15.15
+ bgp log-neighbor-changes
+ neighbor 1.1.0.5 remote-as 301
+ neighbor 172.16.0.14 remote-as 1001
+ neighbor 172.16.0.14 update-source Loopback0
+ neighbor AC10:FFFF:0:2::1 remote-as 301
+ neighbor AC10:FFFF:0:10A1::14 remote-as 1001
+ neighbor AC10:FFFF:0:10A1::14 update-source Loopback0
+ !
+ address-family ipv4
+  network 100.0.15.0 mask 255.255.255.0
+  network 172.16.0.0 mask 255.255.255.0
+  neighbor 1.1.0.5 activate
+  neighbor 1.1.0.5 route-map UPLINK-Moscow in
+  neighbor 1.1.0.5 filter-list 1 out
+  neighbor 172.16.0.14 activate
+  neighbor 172.16.0.14 next-hop-self
+  neighbor 172.16.0.14 prefix-list NO_NAT_FROM_iBGP out
+  no neighbor AC10:FFFF:0:2::1 activate
+  no neighbor AC10:FFFF:0:10A1::14 activate
+ exit-address-family
+ !
+ address-family ipv6
+  network AC10:FFFF:0:10A1::/64
+  network AC10:FFFF:0:10B1::/64
+  network AC10:FFFF:0:10C1::/64
+  neighbor AC10:FFFF:0:2::1 activate
+  neighbor AC10:FFFF:0:2::1 filter-list 1 out
+  neighbor AC10:FFFF:0:10A1::14 activate
+  neighbor AC10:FFFF:0:10A1::14 next-hop-self
+ exit-address-family
+!
+ip forward-protocol nd
+!
+ip as-path access-list 1 permit ^$
+ip as-path access-list 1 deny .*
+!
+no ip http server
+no ip http secure-server
+ip nat pool NAT-MOSCOW 100.0.15.1 100.0.15.1 netmask 255.255.255.0
+ip nat inside source list 1 pool NAT-MOSCOW overload
+ip nat inside source static tcp 172.16.0.19 22 100.0.15.19 2222 extendable
+ip nat inside source static 1.1.1.22 100.0.15.20
+ip route 100.0.15.0 255.255.255.0 Null0
+ip route 192.168.2.0 255.255.254.0 10.101.0.2
+!
+!
+ip prefix-list Deny-area101 seq 5 deny 1.1.1.0/30
+ip prefix-list Deny-area101 seq 10 permit 0.0.0.0/0 le 32
+!
+ip prefix-list LIST_OUT_SP seq 5 permit 172.16.1.0/24
+ip prefix-list LIST_OUT_SP seq 10 permit 192.168.2.0/23
+ip prefix-list LIST_OUT_SP seq 15 permit 0.0.0.0/0
+!
+ip prefix-list NO_NAT_FROM_iBGP seq 5 deny 100.0.15.0/24
+ip prefix-list NO_NAT_FROM_iBGP seq 10 deny 100.0.14.0/24
+ip prefix-list NO_NAT_FROM_iBGP seq 15 permit 0.0.0.0/0
+access-list 1 permit 192.168.0.0 0.0.1.255
+ipv6 router ospf 1
+ router-id 15.15.15.15
+ default-information originate
+!
+!
+!
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 5 permit AC10:FFFF:0:2A42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 10 permit AC10:FFFF:0:2B42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 15 permit AC10:FFFF:0:2C42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 20 permit ::/0
+route-map UPLINK-Moscow permit 10
+ match ip address prefix-list LIST_OUT_SP
+!
+route-map UPLINK-Moscow_ipv6 permit 10
+ match ipv6 address prefix-list LIST_OUT_SP_ipv6
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ login
+ transport input all
+!
+ntp server 172.16.0.12
+ntp server 172.16.0.13
+!
+end
+
+R15#
