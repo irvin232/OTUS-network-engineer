@@ -184,4 +184,81 @@ router ospf 1
  network 172.16.0.0 0.0.0.255 area 0
  network 192.168.0.0 0.0.255.255 area 0
 ```
+S1 - Коммутатор уровня доступа. Поднят OSPF для IP связанности. А так же на нем терминируется пользовательская сеть удаленного доступа, на которой написан DHCP Relay на DHCP сервер главного офиса.
+```
+hostname S1
+vlan 10
+name User_lan
+interface Ethernet0/0
+ description To F1
+ no switchport
+ ip address 192.168.2.2 255.255.255.0
+interface Ethernet0/1
+ description To VPC
+ switchport access vlan 10
+ switchport mode access
+ip dhcp snooping vlan 10
+no ip dhcp snooping information option
+ip dhcp snooping
+router ospf 1
+ network 172.16.0.0 0.0.0.255 area 0
+ network 192.168.0.0 0.0.255.255 area 0
+ ```
 
+Проверка IP связанности. Проверяем с VPC.
+
+Нет IP
+```
+VPCS> sh ip
+
+NAME        : VPCS[1]
+IP/MASK     : 0.0.0.0/0
+GATEWAY     : 0.0.0.0
+DNS         :
+MAC         : 00:50:79:66:68:07
+LPORT       : 20000
+RHOST:PORT  : 127.0.0.1:30000
+MTU         : 1500
+```
+Есть IP
+```
+VPCS> dhcp
+DDORA IP 172.16.0.6/24 GW 172.16.0.1
+
+VPCS> sh ip
+
+NAME        : VPCS[1]
+IP/MASK     : 172.16.0.6/24
+GATEWAY     : 172.16.0.1
+DNS         :
+DHCP SERVER : 192.168.0.2
+DHCP LEASE  : 649797, 649800/324900/568575
+DOMAIN NAME : otus.ru
+MAC         : 00:50:79:66:68:07
+LPORT       : 20000
+RHOST:PORT  : 127.0.0.1:30000
+MTU         : 1500
+```
+Пропингуем главный офис. Связь есть.
+```
+VPCS> ping 192.168.255.1 -P 1
+
+84 bytes from 192.168.255.1 icmp_seq=1 ttl=250 time=1.744 ms
+84 bytes from 192.168.255.1 icmp_seq=2 ttl=250 time=2.160 ms
+84 bytes from 192.168.255.1 icmp_seq=3 ttl=250 time=1.267 ms
+84 bytes from 192.168.255.1 icmp_seq=4 ttl=250 time=1.292 ms
+84 bytes from 192.168.255.1 icmp_seq=5 ttl=250 time=1.555 ms
+```
+Ну и трассировка для информации.
+```
+VPCS> trace 192.168.255.1 -P 1
+trace to 192.168.255.1, 8 hops max (ICMP), press Ctrl+C to stop
+ 1   172.16.0.1   5.324 ms  0.248 ms  0.165 ms
+ 2   192.168.2.1   0.548 ms  0.399 ms  0.388 ms
+ 3   192.168.1.1   0.837 ms  0.611 ms  0.533 ms
+ 4   10.0.23.2   1.527 ms  0.983 ms  0.776 ms
+ 5   192.168.0.1   0.767 ms  0.669 ms  0.689 ms
+ 6   192.168.255.1   1.102 ms  0.879 ms  0.874 ms
+```
+
+Работает! 
