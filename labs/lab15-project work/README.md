@@ -1,1 +1,187 @@
-1
+# Проектная работа 
+
+# Тема: Подключение удаленной площадки через L3 VPN с использованием маршрутизации
+
+## Цель
+
+1) На магистральной сети провайдера запустить L3VPN и организовать взаимодействие двух отдалённых узлов.
+
+2) VPC на стороне удаленной площадки должен получать IP с сервера DHCP головного офиса.
+
+3) Получить IP связанность между офисами, а сервис DHCP удаленная площадка должна получать с головного офиса.
+
+## Используемые технологии.
+
+- Для обеспечения базовой IP-связности внутри магистральной сети провайдера используется протокол ISIS.
+
+- Для связи с клиентом в филиалах используется протокол OSPF.
+
+- Для передачи маршрутов одного филиала другому через магистральную сеть используется технология MPLS.
+
+- В головном офисе DHCP поднят средствами маршрутизатора cisco. А на удаленной площадке написан DHCP-Relay.
+
+## Решение.
+
+#### Распределим сети.
+
+192.168.0.0/16 - сети клиента.
+10.0.0.0/16 - сети провайдера.
+172.16.0.0/24 - пользовательская сеть удаленного офиса.
+
+#### Расшифруем понятия:
+
+LSR - Label Switch Router - это любой маршрутизатор в сети MPLS. Называется он так, потому что выполняет какие-то операции с метками. В нашем примере это узлы: R1, R2, R3.
+
+Customer edge (CE) - маршрутизатор на котором не включен MPLS, соответственно он не отправляет пакетов с метками, но этот маршрутизатор непосредственно присоединен к LSR (PE) маршрутизатору в MPLS VPN.
+
+Provider edge (PE) - LSR, который непосредственно присоединен как минимум к одному CE маршрутизатору. Этот маршрутизатор является границей MPLS VPN. На нём настроены VRF и IBGP.
+
+Provider (P) - LSR, который не присоединен непосредственно к CE маршрутизатору, что позволяет маршрутизатору отправлять пакеты исключительно на основании меток и игнорировать пользовательские маршруты.
+
+Route Distinguishers (RD) - указывает от какого клиента выучен маршрут.
+
+Route Targets (RT) - для определения в какую VRF PE-маршрутизатор поместит iBGP-маршрут.
+
+#### Далее прейдем к настройке:
+
+G1 - Поднимаем OSPF как внутри клиента, так и в сторону провайдера. Интерфейс Loopback 0 - эмулирует сеть клиента. Так же поднимаем сервер DHCP.
+```
+hostname G1
+interface Loopback0
+ ip address 192.168.255.1 255.255.255.255
+interface Ethernet0/0
+ description To R1
+ ip address 192.168.0.2 255.255.255.0
+ no shutdown
+router ospf 1
+ network 192.168.0.0 0.0.255.255 area 0
+ip dhcp excluded-address 172.16.0.1 172.16.0.5
+ip dhcp pool DHCP_172.16.0.0/24
+network 172.16.0.0 255.255.255.0
+default-router 172.16.0.1
+domain-name otus.ru
+lease 7 12 30
+```
+R1
+```
+hostname R1
+mpls ip
+# Создается VRF и указывается для него RD и RT.
+ip vrf G1
+ rd 64500:100
+ route-target export 64500:100
+ route-target import 64500:100
+interface Loopback0
+ ip address 1.1.1.1 255.255.255.255
+ ip router isis 1
+# Клиентский интерфейс привязывается к VRF.
+interface Ethernet0/0
+ description To G1
+ ip vrf forwarding G1
+ ip address 192.168.0.1 255.255.255.0
+ no shutdown
+# На интерфейсе в сторону провайдерской сети должен быть включен MPLS.
+interface Ethernet0/1
+ description To R2
+ ip address 10.0.12.1 255.255.255.0
+ ip router isis 1
+ mpls ip
+ no shutdown
+# OSPF для связи с G1 запускается в конкретном VRF. В него импортируются маршруты из BGP.
+router ospf 2 vrf G1
+ redistribute bgp 64500 subnets
+ network 192.168.0.0 0.0.255.255 area 0
+# ISIS для внутренней связности в сети провайдера.
+router isis 1
+ net 10.0000.0000.0001.00
+# Удалённый PE должен быть настроен в качестве соседа. Поскольку это IBGP, указываем, что пакеты отправляются от интерфейса Loopback0.
+router bgp 64500
+ neighbor 3.3.3.3 remote-as 64500
+ neighbor 3.3.3.3 update-source Loopback0
+# Это то, что превращает BGP в MBGP - address family vpnv4 для передачии клиентских маршрутов.
+ address-family vpnv4
+ neighbor 3.3.3.3 activate
+ neighbor 3.3.3.3 send-community both
+# Этот address-family нужен для того, чтобы в BGP импортировать клиентские маршруты. В данном случае из OSPF. Оперирует в VRF G1
+ address-family ipv4 vrf G1
+ redistribute ospf 2 vrf G1
+# Настроим LSR ID вручную.
+mpls ldp router-id Loopback0 force
+```
+R2 - Ввыступает в роли P. Поэтому у него нет никаких забот, кроме MPLS на интерфейсах и ISIS для внутренней связности в сети провайдера.
+```
+hostname R2
+mpls ip
+interface Loopback0
+ ip address 2.2.2.2 255.255.255.255
+ ip router isis 1
+interface Ethernet0/1
+ description To R1
+ ip address 10.0.12.2 255.255.255.0
+ ip router isis 1
+ mpls ip
+ no shutdown
+interface Ethernet0/0
+ description To R3
+ ip address 10.0.23.2 255.255.255.0
+ ip router isis 1
+ mpls ip
+ no shutdown
+router isis 1
+ net 10.0000.0000.0002.00
+mpls ldp router-id Loopback0 force
+```
+R3 - Повторяет настройку R1.
+```
+hostname R3
+mpls ip
+ip vrf G1
+ rd 64500:100
+ route-target export 64500:100
+ route-target import 64500:100
+interface Loopback0
+ ip address 3.3.3.3 255.255.255.255
+ ip router isis 1
+interface Ethernet0/1
+ description To R2
+ ip address 10.0.23.3 255.255.255.0
+ ip router isis 1
+ mpls ip
+ no shutdown
+interface Ethernet0/0
+ description To F1
+ ip vrf forwarding G1
+ ip address 192.168.1.1 255.255.255.0
+ no shutdown
+router ospf 2 vrf G1
+ redistribute bgp 64500 subnets
+ network 192.168.0.0 0.0.255.255 area 0
+router isis 1
+ net 10.0000.0000.0003.00
+router bgp 64500
+ neighbor 1.1.1.1 remote-as 64500
+ neighbor 1.1.1.1 update-source Loopback0
+ address-family vpnv4
+ neighbor 1.1.1.1 activate
+ neighbor 1.1.1.1 send-community both
+ address-family ipv4 vrf G1
+ redistribute ospf 2 vrf G1
+mpls ldp router-id Loopback0
+```
+F1 - Повторяет настройки G1. Добаядется анонс в OSPF пользовательской сети.
+```
+hostname F1
+interface Loopback0
+ ip address 192.168.255.2 255.255.255.255
+interface Ethernet0/0
+ description To R3
+ ip address 192.168.1.2 255.255.255.0
+ no shutdown
+interface Ethernet0/1
+ description To S1
+ ip address 192.168.2.1 255.255.255.0
+router ospf 1
+ network 172.16.0.0 0.0.0.255 area 0
+ network 192.168.0.0 0.0.255.255 area 0
+```
+
