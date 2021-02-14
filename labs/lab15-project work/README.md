@@ -32,6 +32,10 @@
 
 ![](https://github.com/irvin232/OTUS-network-engineer/blob/master/labs/lab15-project%20work/lab15.jpg)
 
+#### Конфигурации оборудования:
+
+[Итоговые конфигурации оборудования](https://github.com/irvin232/OTUS-network-engineer/tree/master/labs/lab15-project%20work/Configs).
+
 #### Расшифруем понятия:
 
 LSR - Label Switch Router - это любой маршрутизатор в сети MPLS. Называется он так, потому что выполняет какие-то операции с метками. В нашем примере это узлы: R1, R2, R3.
