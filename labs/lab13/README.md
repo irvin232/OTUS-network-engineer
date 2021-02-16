@@ -260,11 +260,10 @@ router eigrp 200
  network 10.201.0.0 0.0.0.255
 exit
 ```
-
-R28 - Для начала добавим статику на R28 для получения связанности по менеджмент сетям. Настроим два туннеля DMVMN до двух маршрутизаторов Москвы. Настроим eigrp и анонсируем в нем тунельные сети, а так же пользовательские сети Чокурдах. Т.к. у нас настроен IP SLA, то добавим `deny` на пользовательские сети в `access-list` для `route-map` на vlan интерфейсах.
+R28 - Для начала добавим статику на Loopback интерфейсы R14 и R15 через разные интерфейсы R28 для получения связанности и отказоустойчивости. Настроим два туннеля DMVMN до двух маршрутизаторов Москвы через разные физические интерфейсы. Настроим eigrp и анонсируем в нем тунельные сети, а так же пользовательские сети Чокурдах. Т.к. у нас настроен IP SLA, то добавим `deny` на пользовательские сети в `access-list` для `route-map` на vlan интерфейсах.
 ```
-ip route 172.16.0.0 255.255.248.0 1.1.0.57 105
-ip route 172.16.0.0 255.255.248.0 1.1.0.49 110
+ip route 172.16.0.14 255.255.255.255 1.1.0.57
+ip route 172.16.0.15 255.255.255.255 1.1.0.49
 interface Tunnel200
  ip address 10.200.0.3 255.255.255.0
  ip mtu 1400
@@ -276,7 +275,7 @@ interface Tunnel200
  ip nhrp holdtime 600
  ip nhrp shortcut
  ip nhrp nhs 10.200.0.1
- tunnel source Ethernet0/2.30
+ tunnel source Ethernet0/0
  tunnel key 200
 exit
 interface Tunnel201
@@ -290,7 +289,7 @@ interface Tunnel201
  ip nhrp holdtime 600
  ip nhrp shortcut
  ip nhrp nhs 10.201.0.1
- tunnel source Ethernet0/2.30
+ tunnel source Ethernet0/1
  tunnel key 201
 exit
 router eigrp 200
