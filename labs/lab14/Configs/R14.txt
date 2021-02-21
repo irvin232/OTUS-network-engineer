@@ -1,1 +1,279 @@
-1
+R14#sh run
+Building configuration...
+
+Current configuration : 6102 bytes
+!
+! Last configuration change at 22:43:09 EET Sun Feb 21 2021
+! NVRAM config last updated at 23:14:16 EET Sun Feb 21 2021
+! NVRAM config last updated at 23:14:16 EET Sun Feb 21 2021
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R14
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+clock timezone EET 2 0
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+
+
+!
+!
+!
+!
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+!
+!
+!
+!
+!
+crypto isakmp policy 100
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+ lifetime 900
+!
+crypto isakmp policy 200
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+ lifetime 900
+crypto isakmp key cisco address 172.16.1.18
+crypto isakmp key cisco2 address 0.0.0.0
+!
+!
+crypto ipsec transform-set GRE_IPSEC esp-des
+ mode transport
+crypto ipsec transform-set DMVPN_IPSEC esp-des
+ mode transport
+!
+crypto ipsec profile TO-LC
+ set security-association lifetime seconds 900
+ set transform-set DMVPN_IPSEC
+!
+crypto ipsec profile TO-SPB
+ set security-association lifetime seconds 900
+ set transform-set GRE_IPSEC
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 172.16.0.14 255.255.255.255
+ ip ospf 1 area 0
+ ipv6 address AC10:FFFF:0:10A1::14/128
+ ipv6 ospf 1 area 0
+!
+interface Tunnel100
+ ip address 10.100.0.1 255.255.255.0
+ ip mtu 1400
+ ip tcp adjust-mss 1360
+ tunnel source Loopback0
+ tunnel destination 172.16.1.18
+ tunnel key 100
+ tunnel protection ipsec profile TO-SPB
+!
+interface Tunnel200
+ ip address 10.200.0.1 255.255.255.0
+ no ip redirects
+ ip mtu 1400
+ no ip next-hop-self eigrp 200
+ no ip split-horizon eigrp 200
+ ip nhrp map multicast dynamic
+ ip nhrp network-id 200
+ ip nhrp holdtime 600
+ ip nhrp redirect
+ ip summary-address eigrp 200 192.168.0.0 255.255.248.0
+ ip tcp adjust-mss 1360
+ tunnel source Loopback0
+ tunnel mode gre multipoint
+ tunnel key 200
+ tunnel protection ipsec profile TO-LC
+!
+interface Ethernet0/0
+ ip address 1.1.1.5 255.255.255.252
+ ip nat inside
+ ip virtual-reassembly in
+ ip ospf 1 area 0
+ ipv6 address FE80::14 link-local
+ ipv6 address AC10:FFFF:0:1021::1/64
+ ipv6 ospf 1 area 0
+!
+interface Ethernet0/1
+ ip address 1.1.1.9 255.255.255.252
+ ip nat inside
+ ip virtual-reassembly in
+ ip ospf 1 area 0
+ ipv6 address FE80::14 link-local
+ ipv6 address AC10:FFFF:0:1031::1/64
+ ipv6 ospf 1 area 0
+!
+interface Ethernet0/2
+ ip address 100.0.14.19 255.255.255.0 secondary
+ ip address 1.1.0.2 255.255.255.252
+ ip nat outside
+ ip virtual-reassembly in
+ ip ospf 1 area 0
+ ipv6 address FE80::14 link-local
+ ipv6 address AC10:FFFF:0:1::2/64
+ ipv6 ospf 1 area 0
+!
+interface Ethernet0/3
+ ip address 1.1.1.1 255.255.255.252
+ ip nat inside
+ ip virtual-reassembly in
+ ip ospf 1 area 101
+ ipv6 address FE80::14 link-local
+ ipv6 address AC10:FFFF:0:1011::1/64
+ ipv6 ospf 1 area 101
+!
+!
+router eigrp 200
+ network 10.200.0.0 0.0.0.255
+ network 10.201.0.0 0.0.0.255
+ network 192.168.0.0 0.0.1.255
+!
+router ospf 1
+ router-id 14.14.14.14
+ area 101 stub no-summary
+ redistribute static subnets
+ default-information originate metric 5 route-map DOWNLINK-Moscow
+!
+router bgp 1001
+ bgp router-id 14.14.14.14
+ bgp log-neighbor-changes
+ neighbor 1.1.0.1 remote-as 101
+ neighbor 172.16.0.15 remote-as 1001
+ neighbor 172.16.0.15 update-source Loopback0
+ neighbor AC10:FFFF:0:1::1 remote-as 101
+ neighbor AC10:FFFF:0:10A1::15 remote-as 1001
+ neighbor AC10:FFFF:0:10A1::15 update-source Loopback0
+ !
+ address-family ipv4
+  network 100.0.14.0 mask 255.255.255.0
+  network 172.16.0.0 mask 255.255.255.0
+  neighbor 1.1.0.1 activate
+  neighbor 1.1.0.1 route-map Moscow-deny-all in
+  neighbor 1.1.0.1 filter-list 1 out
+  neighbor 172.16.0.15 activate
+  neighbor 172.16.0.15 next-hop-self
+  neighbor 172.16.0.15 prefix-list NO_NAT_FROM_iBGP out
+  no neighbor AC10:FFFF:0:1::1 activate
+  no neighbor AC10:FFFF:0:10A1::15 activate
+ exit-address-family
+ !
+ address-family ipv6
+  network AC10:FFFF:0:10A1::/64
+  network AC10:FFFF:0:10B1::/64
+  network AC10:FFFF:0:10C1::/64
+  neighbor AC10:FFFF:0:1::1 activate
+  neighbor AC10:FFFF:0:1::1 route-map Moscow-deny-all-ipv6 in
+  neighbor AC10:FFFF:0:1::1 filter-list 1 out
+  neighbor AC10:FFFF:0:10A1::15 activate
+  neighbor AC10:FFFF:0:10A1::15 next-hop-self
+ exit-address-family
+!
+ip forward-protocol nd
+!
+ip as-path access-list 1 permit ^$
+ip as-path access-list 1 deny .*
+!
+no ip http server
+no ip http secure-server
+ip nat pool NAT-MOSCOW 100.0.14.1 100.0.14.1 netmask 255.255.255.0
+ip nat inside source list 1 pool NAT-MOSCOW overload
+ip nat inside source static tcp 172.16.0.19 22 100.0.14.19 2222 extendable
+ip route 100.0.14.0 255.255.255.0 Null0
+ip route 192.168.2.0 255.255.254.0 10.100.0.2
+!
+!
+ip prefix-list LIST_OUT_SP seq 5 permit 172.16.1.0/24
+ip prefix-list LIST_OUT_SP seq 10 permit 192.168.2.0/23
+!
+ip prefix-list LIST_OUT_deny-all seq 5 permit 0.0.0.0/0
+!
+ip prefix-list NO_NAT_FROM_iBGP seq 5 deny 100.0.15.0/24
+ip prefix-list NO_NAT_FROM_iBGP seq 10 deny 100.0.14.0/24
+ip prefix-list NO_NAT_FROM_iBGP seq 15 permit 0.0.0.0/0
+access-list 1 permit 192.168.0.0 0.0.1.255
+ipv6 router ospf 1
+ router-id 14.14.14.14
+ area 101 stub no-summary
+ default-information originate metric 5 route-map DOWNLINK-Moscow_ipv6
+!
+!
+!
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 5 permit AC10:FFFF:0:2A42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 10 permit AC10:FFFF:0:2B42::/64
+ipv6 prefix-list LIST_OUT_SP_ipv6 seq 15 permit AC10:FFFF:0:2C42::/64
+!
+ipv6 prefix-list LIST_OUT_deny-all_ipv6 seq 5 permit ::/0
+route-map DOWNLINK-Moscow_ipv6 permit 10
+ match ipv6 address prefix-list LIST_OUT_SP_ipv6
+!
+route-map DOWNLINK-Moscow permit 10
+ match ip address prefix-list LIST_OUT_SP
+!
+route-map Moscow-deny-all-ipv6 permit 10
+ match ipv6 address prefix-list LIST_OUT_deny-all_ipv6
+!
+route-map Moscow-deny-all permit 10
+ match ip address prefix-list LIST_OUT_deny-all
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ login
+ transport input all
+!
+ntp server 172.16.0.12
+ntp server 172.16.0.13
+!
+end
+
+R14#
