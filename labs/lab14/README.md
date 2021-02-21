@@ -111,11 +111,11 @@ crypto ipsec profile TO-MSK
  set transform-set GRE_IPSEC
  exit
 interface Tunnel 100
- tunnel protection ipsec profile TO-MSK shared
+ tunnel protection ipsec profile TO-MSK
  no keepalive 3 3
  exit
 interface Tunnel 101
- tunnel protection ipsec profile TO-MSK shared
+ tunnel protection ipsec profile TO-MSK
  no keepalive 3 3
  exit
 ```
