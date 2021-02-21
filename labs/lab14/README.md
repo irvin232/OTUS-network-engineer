@@ -354,10 +354,10 @@ R28#sh crypto session
 Crypto session current status
 
 Interface: Tunnel200
-Session status: UP-NO-IKE
+Session status: UP-ACTIVE
 Peer: 172.16.0.14 port 500
   Session ID: 0
-  IKEv1 SA: local 1.1.0.58/500 remote 172.16.0.14/500 Inactive
+  IKEv1 SA: local 1.1.0.58/500 remote 172.16.0.14/500 Active
   IPSEC FLOW: permit 47 host 1.1.0.58 host 172.16.0.14
         Active SAs: 2, origin: crypto map
 
@@ -367,7 +367,7 @@ Peer: 172.16.0.15 port 500
   Session ID: 0
   IKEv1 SA: local 1.1.0.50/500 remote 172.16.0.15/500 Active
   IPSEC FLOW: permit 47 host 1.1.0.50 host 172.16.0.15
-        Active SAs: 4, origin: crypto map
+        Active SAs: 2, origin: crypto map
 ```
 ### Часть 4: Проверим IP связанность
 
