@@ -92,6 +92,8 @@ R28|e0/2.32|IPv6|ac10:ffff:0:30c3::28/64|ac10:ffff:0:30c3::/64|Пользова�
 
 ### Часть 2: Настроим GRE поверх IPSec между офисами Москва и С.-Петербург
 
+Создаем политику isakmp. Настроим isakmp pre-shared key. Создаем transform set. Создаем IPSec-профиль. Применяем IPsec-профиль на интерфейсе тунеля.
+
 R18
 ```
 crypto isakmp policy 100 
@@ -163,7 +165,7 @@ interface Tunnel 101
  no keepalive 3 3
  exit
 ```
-Проверим работу командой `sh crypto isakmp sa` на R14,R15 и R18.
+#### Проверим работу командой `sh crypto isakmp sa` на R14, R15 и R18.
 
 R14
 ```
@@ -287,7 +289,8 @@ interface Tunnel 201
  tunnel protection ipsec profile TO-MSK
  exit
 ```
-Проверим работу командой `sh crypto session` на R14, R15, R27 и R28.
+#### Проверим работу командой `sh crypto session` на R14, R15, R27 и R28.
+
 R14
 ```
 R14#sh crypto session
@@ -368,3 +371,61 @@ Peer: 172.16.0.15 port 500
 ```
 ### Часть 4: Проверим IP связанность
 
+Попингуем из каждого офиса в другие два офиса по одному VPC.
+
+VPC7 
+```
+VPCS> ping 192.168.3.2
+
+84 bytes from 192.168.3.2 icmp_seq=1 ttl=59 time=3.926 ms
+84 bytes from 192.168.3.2 icmp_seq=2 ttl=59 time=4.655 ms
+84 bytes from 192.168.3.2 icmp_seq=3 ttl=59 time=3.286 ms
+84 bytes from 192.168.3.2 icmp_seq=4 ttl=59 time=5.904 ms
+84 bytes from 192.168.3.2 icmp_seq=5 ttl=59 time=3.287 ms
+
+VPCS> ping 192.168.5.2
+
+84 bytes from 192.168.5.2 icmp_seq=1 ttl=61 time=34.117 ms
+84 bytes from 192.168.5.2 icmp_seq=2 ttl=61 time=3.737 ms
+84 bytes from 192.168.5.2 icmp_seq=3 ttl=61 time=4.760 ms
+84 bytes from 192.168.5.2 icmp_seq=4 ttl=61 time=4.900 ms
+84 bytes from 192.168.5.2 icmp_seq=5 ttl=61 time=3.485 ms
+```
+VPC
+```
+VPCS> ping 192.168.1.4
+
+84 bytes from 192.168.1.4 icmp_seq=1 ttl=59 time=4.789 ms
+84 bytes from 192.168.1.4 icmp_seq=2 ttl=59 time=3.078 ms
+84 bytes from 192.168.1.4 icmp_seq=3 ttl=59 time=5.437 ms
+84 bytes from 192.168.1.4 icmp_seq=4 ttl=59 time=5.472 ms
+84 bytes from 192.168.1.4 icmp_seq=5 ttl=59 time=4.472 ms
+
+VPCS> ping 192.168.4.2
+
+84 bytes from 192.168.4.2 icmp_seq=1 ttl=59 time=39.054 ms
+84 bytes from 192.168.4.2 icmp_seq=2 ttl=59 time=5.793 ms
+84 bytes from 192.168.4.2 icmp_seq=3 ttl=59 time=5.836 ms
+84 bytes from 192.168.4.2 icmp_seq=4 ttl=59 time=3.869 ms
+84 bytes from 192.168.4.2 icmp_seq=5 ttl=59 time=4.272 ms
+```
+VPC31
+```
+VPCS> ping 192.168.0.4
+
+84 bytes from 192.168.0.4 icmp_seq=1 ttl=61 time=9.740 ms
+84 bytes from 192.168.0.4 icmp_seq=2 ttl=61 time=3.860 ms
+84 bytes from 192.168.0.4 icmp_seq=3 ttl=61 time=3.547 ms
+84 bytes from 192.168.0.4 icmp_seq=4 ttl=61 time=5.734 ms
+84 bytes from 192.168.0.4 icmp_seq=5 ttl=61 time=4.585 ms
+
+VPCS> ping 192.168.2.2
+
+84 bytes from 192.168.2.2 icmp_seq=1 ttl=59 time=10.595 ms
+84 bytes from 192.168.2.2 icmp_seq=2 ttl=59 time=4.945 ms
+84 bytes from 192.168.2.2 icmp_seq=3 ttl=59 time=7.784 ms
+84 bytes from 192.168.2.2 icmp_seq=4 ttl=59 time=5.119 ms
+84 bytes from 192.168.2.2 icmp_seq=5 ttl=59 time=5.725 ms
+```
+
+#### IP связанность есть.
