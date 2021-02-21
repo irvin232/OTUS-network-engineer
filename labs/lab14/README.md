@@ -195,3 +195,176 @@ IPv6 Crypto ISAKMP SA
 ```
 ### Часть 3: Настроим DMVPN поверх IPSec между Москва и Чокурдах, Лабытнанги
 
+Создаем политику isakmp. Настроим isakmp pre-shared key. Создаем transform set. Создаем IPSec-профиль. Применяем IPsec-профиль на интерфейсе туннеля.
+
+R14
+```
+crypto isakmp policy 200 
+authentication pre-share
+encryption 3des
+group 2
+hash md5
+lifetime 900
+exit
+crypto isakmp key cisco2 address 0.0.0.0 0.0.0.0
+crypto ipsec transform-set DMVPN_IPSEC esp-des
+mode transport
+exit
+crypto ipsec profile TO-LC
+ set security-association lifetime seconds 900
+ set transform-set DMVPN_IPSEC
+ exit
+interface Tunnel 200
+ tunnel protection ipsec profile TO-LC
+ exit
+```
+R15
+```
+crypto isakmp policy 200 
+authentication pre-share
+encryption 3des
+group 2
+hash md5
+lifetime 900
+exit
+crypto isakmp key cisco2 address 0.0.0.0 0.0.0.0
+crypto ipsec transform-set DMVPN_IPSEC esp-des
+mode transport
+exit
+crypto ipsec profile TO-LC
+ set security-association lifetime seconds 900
+ set transform-set DMVPN_IPSEC
+ exit
+interface Tunnel 201
+ tunnel protection ipsec profile TO-LC
+ exit
+```
+R27 - Добавляем на интерфейсе туннеля к IPsec-профилю ключевое слово `shared`, т.к. все интерфейсы, совместно использующие профиль IPSec, должны быть настроены с помощью ключевого слова shared.
+```
+crypto isakmp policy 200 
+authentication pre-share
+encryption 3des
+group 2
+hash md5
+lifetime 900
+exit
+crypto isakmp key cisco2 address 0.0.0.0 0.0.0.0
+crypto ipsec transform-set DMVPN_IPSEC esp-des
+mode transport
+exit
+crypto ipsec profile TO-MSK
+ set security-association lifetime seconds 900
+ set transform-set DMVPN_IPSEC
+ exit
+interface Tunnel 200
+ tunnel protection ipsec profile TO-MSK shared
+ exit
+interface Tunnel 201
+ tunnel protection ipsec profile TO-MSK shared
+ exit
+```
+R28
+```
+crypto isakmp policy 200 
+authentication pre-share
+encryption 3des
+group 2
+hash md5
+lifetime 900
+exit
+crypto isakmp key cisco2 address 0.0.0.0 0.0.0.0
+crypto ipsec transform-set DMVPN_IPSEC esp-des
+mode transport
+exit
+crypto ipsec profile TO-MSK
+ set security-association lifetime seconds 900
+ set transform-set DMVPN_IPSEC
+ exit
+interface Tunnel 200
+ tunnel protection ipsec profile TO-MSK
+ exit
+interface Tunnel 201
+ tunnel protection ipsec profile TO-MSK
+ exit
+```
+Проверим работу командой `sh crypto session` на R14, R15, R27 и R28.
+R14
+```
+R14#sh crypto session
+Crypto session current status
+
+Interface: Tunnel200
+Session status: UP-ACTIVE
+Peer: 172.16.3.27 port 500
+  IKEv1 SA: local 172.16.0.14/500 remote 172.16.3.27/500 Active
+  IPSEC FLOW: permit 47 host 172.16.0.14 host 172.16.3.27
+        Active SAs: 2, origin: crypto map
+
+Interface: Tunnel200
+Session status: UP-ACTIVE
+Peer: 1.1.0.58 port 500
+  IKEv1 SA: local 172.16.0.14/500 remote 1.1.0.58/500 Active
+  IPSEC FLOW: permit 47 host 172.16.0.14 host 1.1.0.58
+        Active SAs: 2, origin: crypto map
+```
+R15
+```
+R15#sh crypto session
+Crypto session current status
+
+Interface: Tunnel201
+Session status: UP-ACTIVE
+Peer: 172.16.3.27 port 500
+  IKEv1 SA: local 172.16.0.15/500 remote 172.16.3.27/500 Active
+  IPSEC FLOW: permit 47 host 172.16.0.15 host 172.16.3.27
+        Active SAs: 2, origin: crypto map
+
+Interface: Tunnel201
+Session status: UP-ACTIVE
+Peer: 1.1.0.50 port 500
+  IKEv1 SA: local 172.16.0.15/500 remote 1.1.0.50/500 Active
+  IPSEC FLOW: permit 47 host 172.16.0.15 host 1.1.0.50
+        Active SAs: 2, origin: crypto map
+```
+R27
+```
+R27#sh crypto session
+Crypto session current status
+
+Interface: Tunnel200
+Session status: UP-ACTIVE
+Peer: 172.16.0.14 port 500
+  IKEv1 SA: local 172.16.3.27/500 remote 172.16.0.14/500 Active
+  IPSEC FLOW: permit 47 host 172.16.3.27 host 172.16.0.14
+        Active SAs: 2, origin: crypto map
+
+Interface: Tunnel201
+Session status: UP-ACTIVE
+Peer: 172.16.0.15 port 500
+  IKEv1 SA: local 172.16.3.27/500 remote 172.16.0.15/500 Active
+  IPSEC FLOW: permit 47 host 172.16.3.27 host 172.16.0.15
+        Active SAs: 2, origin: crypto map
+```
+R28
+```
+R28#sh crypto session
+Crypto session current status
+
+Interface: Tunnel200
+Session status: UP-NO-IKE
+Peer: 172.16.0.14 port 500
+  Session ID: 0
+  IKEv1 SA: local 1.1.0.58/500 remote 172.16.0.14/500 Inactive
+  IPSEC FLOW: permit 47 host 1.1.0.58 host 172.16.0.14
+        Active SAs: 2, origin: crypto map
+
+Interface: Tunnel201
+Session status: UP-ACTIVE
+Peer: 172.16.0.15 port 500
+  Session ID: 0
+  IKEv1 SA: local 1.1.0.50/500 remote 172.16.0.15/500 Active
+  IPSEC FLOW: permit 47 host 1.1.0.50 host 172.16.0.15
+        Active SAs: 4, origin: crypto map
+```
+### Часть 4: Проверим IP связанность
+
