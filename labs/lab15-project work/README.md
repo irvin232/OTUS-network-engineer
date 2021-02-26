@@ -95,7 +95,7 @@ interface Ethernet0/1
  ip router isis 1
  mpls ip
  no shutdown
-# OSPF для связи с G1 запускается в конкретном VRF. В него импортируются маршруты из BGP.
+# OSPF для связи с G1 запускается в конкретном VRF. В него импортируются маршруты из BGP. А также включаем ospf на нужном IP интерфейсе.
 router ospf 2 vrf G1
  redistribute bgp 64500 subnets
  network 192.168.0.0 0.0.255.255 area 0
