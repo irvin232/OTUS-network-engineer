@@ -106,14 +106,14 @@ router isis 1
 router bgp 64500
  neighbor 3.3.3.3 remote-as 64500
  neighbor 3.3.3.3 update-source Loopback0
-# Это то, что превращает BGP в MBGP - address family vpnv4 для передачии клиентских маршрутов.
+# Это то, что превращает BGP в MBGP. Это расширенный протокол BGP, который включает многоадресные IP-маршруты и служит для передачии клиентских маршрутов.
  address-family vpnv4
- neighbor 3.3.3.3 activate
- neighbor 3.3.3.3 send-community both
-# Этот address-family нужен для того, чтобы в BGP импортировать клиентские маршруты. В данном случае из OSPF. Оперирует в VRF G1
+  neighbor 3.3.3.3 activate
+  neighbor 3.3.3.3 send-community both
+# Этот address-family нужен для того, чтобы в BGP импортировать клиентские маршруты. В данном случае из OSPF.
  address-family ipv4 vrf G1
- redistribute ospf 2 vrf G1
-# Настроим LSR ID вручную.
+  redistribute ospf 2 vrf G1
+# Настроим в mpls маршрутизатору router-id от Loopback0 интерфейса.
 mpls ldp router-id Loopback0 force
 ```
 R2 - Выступает в роли P. Поэтому у него нет никаких забот, кроме MPLS на интерфейсах и ISIS для внутренней связности в сети провайдера.
@@ -205,6 +205,9 @@ interface Ethernet0/1
  description To VPC
  switchport access vlan 10
  switchport mode access
+interface Vlan10
+ ip address 172.16.0.1 255.255.255.0
+ ip helper-address 192.168.255.1
 ip dhcp snooping vlan 10
 no ip dhcp snooping information option
 ip dhcp snooping
